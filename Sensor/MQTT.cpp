@@ -14,7 +14,7 @@ void MQTT::_checkConnection() {
   Serial.print("Attempting MQTT connection to ");
   Serial.print(_server);
   Serial.print(" with clientId ");
-  String clientId = "Sensor-" + String(random(0xffffff), HEX);
+  String clientId = "Sensor-" + String(ESP.getChipId(), HEX);
   Serial.println(clientId);
   
   //mqtt.setCallback(receivedMessage);

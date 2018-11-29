@@ -7,7 +7,6 @@
 
 #include "MQTT.h"
 #include <ESP8266WiFi.h>
-#include <Ticker.h>
 
 class Sensor {
   public:
@@ -17,7 +16,9 @@ class Sensor {
   void measured(char* type, double value, char* unit);
   private:
   MQTT _mqtt;
-  Ticker _measureTicker;
+  void (*_measurementCallback)();
+  long _lastMeasurement;
+  int _interval;
 };
 
 #endif

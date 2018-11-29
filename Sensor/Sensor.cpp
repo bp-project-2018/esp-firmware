@@ -10,10 +10,16 @@ Sensor::Sensor() : _mqtt() {
 
 void Sensor::loop() {
     _mqtt.loop();
+    if(_interval > 0 && _measurementCallback && ((millis() - _lastMeasurement > _interval*1000) || millis() < _lastMeasurement)) { //millis will eventually overflow
+      _lastMeasurement = millis();
+      Serial.println("Collecting measurements");
+      _measurementCallback();
+    }
 }
 
 void Sensor::setMeasurement(int interval, void (*callback)()) {
-    _measureTicker.attach(interval, callback);
+    _measurementCallback = callback;
+    _interval = interval;
 }
 
 void Sensor::measured(char* type, double value, char* unit) {

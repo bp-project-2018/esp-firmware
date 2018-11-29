@@ -1,5 +1,5 @@
-//#define HAS_TEMPHUM_DHT
-#define HAS_BRIGHTNESS_ADC
+#define HAS_TEMPHUM_DHT
+//#define HAS_BRIGHTNESS_ADC
 
 #include "Sensor.h"
 
@@ -19,7 +19,6 @@ void loop() {
 }
 
 void measure() {
-  Serial.println("Doing measurements");
   #ifdef HAS_BRIGHTNESS_ADC
   sensor.measured("brightness", ((double)(1024-analogRead(0))/(double)1024)*100, "%");
   #endif
@@ -28,6 +27,4 @@ void measure() {
   sensor.measured("temperature",  dht.readTemperature(), "°C");
   sensor.measured("humidity", dht.readHumidity(), "%");
   #endif
-
-  
 }

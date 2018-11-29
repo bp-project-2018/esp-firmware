@@ -18,6 +18,7 @@ class MQTT {
     char _server[30];
     WiFiClient _espClient;
     PubSubClient _mqtt; 
+    void _callback(char* topic, byte* payload, unsigned int length);
 };
 
 #endif

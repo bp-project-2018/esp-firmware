@@ -1,7 +1,7 @@
 #include "MQTT.h"
 
 MQTT::MQTT() : _mqtt(_espClient) {
-  
+  _mqtt.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->_callback(topic, payload, length); });
 }
 
 void MQTT::loop() {
@@ -16,8 +16,6 @@ void MQTT::_checkConnection() {
   Serial.print(" with clientId ");
   String clientId = "Sensor-" + String(ESP.getChipId(), HEX);
   Serial.println(clientId);
-  
-  //mqtt.setCallback(receivedMessage);
 
   WiFi.mode(WIFI_STA);
   if (_mqtt.connect(clientId.c_str())) {
@@ -32,4 +30,8 @@ void MQTT::_checkConnection() {
 void MQTT::setServer(char* server) {
   strcpy(_server, server);
   _mqtt.setServer(_server, 1883);
+}
+
+void MQTT::_callback(char* topic, byte* payload, unsigned int length) {
+  
 }

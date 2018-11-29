@@ -24,12 +24,17 @@ void MQTT::_checkConnection() {
     Serial.print("failed, rc=");
     Serial.print(_mqtt.state());
     _isReconnecting = true;
+    _reconnectTicker.once(10, _reconnectTimeout, this);
   }
 }
 
 void MQTT::setServer(char* server) {
   strcpy(_server, server);
   _mqtt.setServer(_server, 1883);
+}
+
+void MQTT::_reconnectTimeout(MQTT* mqtt) {
+    mqtt->_isReconnecting = false;
 }
 
 void MQTT::_callback(char* topic, byte* payload, unsigned int length) {

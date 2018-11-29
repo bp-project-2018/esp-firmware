@@ -5,9 +5,9 @@
 #define WIFI_PASSWORD "totallysecure"
 #define MQTT_SERVER "192.168.10.1"
 
-#include "MQTT.h"
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
+#include "MQTT.h"
 
 class SensorClass {
   public:

@@ -6,6 +6,7 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
+#include <Ticker.h>
 
 class MQTT {
   public:
@@ -19,6 +20,8 @@ class MQTT {
     char _server[30];
     WiFiClient _espClient;
     PubSubClient _mqtt; 
+    Ticker _reconnectTicker;
+    static void _reconnectTimeout(MQTT* mqtt);
     void _callback(char* topic, byte* payload, unsigned int length);
 };
 

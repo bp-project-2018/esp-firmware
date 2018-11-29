@@ -6,9 +6,15 @@
 
 class Datagram {
   public:
+    typedef enum {
+        MSG = 77,
+        CMD = 67
+    } Datagram_type_t;
+    
     Datagram();
-    void decode();
-    char* type;
+    bool decode(char* payload);
+    void encode(char* type);
+    Datagram_type_t type;
     bool isValid;
   private:
     char* _payload;

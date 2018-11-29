@@ -2,7 +2,7 @@
 #define MQTT_h
 
 #include "Arduino.h"
-#include "Message.h"
+#include "Datagram.h"
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
@@ -12,6 +12,7 @@ class MQTT {
     MQTT();
     void loop();
     void setServer(char* server);
+    Datagram datagram;
   private:
     void _checkConnection();
     bool _isReconnecting;

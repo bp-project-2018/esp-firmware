@@ -1,5 +1,5 @@
-#include "Message.h"
+#include "Datagram.h"
 
-Message::Message() {
+Datagram::Datagram() {
   
 }

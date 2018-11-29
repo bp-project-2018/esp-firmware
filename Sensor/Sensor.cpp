@@ -1,9 +1,5 @@
 #include "Sensor.h"
 
-#include <functional>
-using namespace std;
-using namespace std::placeholders;
-
 SensorClass::SensorClass() : _mqtt() {
     Serial.begin(9600);
     WiFi.hostname("Sensor-" + ESP.getChipId());
@@ -23,11 +19,11 @@ void SensorClass::loop() {
 
 void SensorClass::setMeasurement(int interval, void (*callback)()) {
     _measurementCallback = callback;
-    //_measurementTicker.attach(interval, std::bind(&Sensor::_measureTick, this));
+    _measurementTicker.attach(interval, SensorClass::_measureTick, this);
 }
 
-void SensorClass::_measureTick() {
-    _willMeasure = true;
+void SensorClass::_measureTick(SensorClass* sensor) {
+    sensor->_willMeasure = true;
 }
 
 void SensorClass::measured(char* type, double value, char* unit) {

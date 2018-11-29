@@ -21,7 +21,7 @@ class SensorClass {
   Ticker _measurementTicker;
   bool _willMeasure;
   void (*_measurementCallback)();
-  void _measureTick();
+  static void _measureTick(SensorClass* sensor);
 };
 
 extern SensorClass Sensor;

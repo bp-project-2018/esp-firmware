@@ -1,6 +1,10 @@
 #include "Sensor.h"
 
-Sensor::Sensor() : _mqtt() {
+#include <functional>
+using namespace std;
+using namespace std::placeholders;
+
+SensorClass::SensorClass() : _mqtt() {
     Serial.begin(9600);
     WiFi.hostname("Sensor-" + ESP.getChipId());
     WiFi.mode(WIFI_STA);
@@ -8,21 +12,25 @@ Sensor::Sensor() : _mqtt() {
     _mqtt.setServer(MQTT_SERVER);
 }
 
-void Sensor::loop() {
+void SensorClass::loop() {
     _mqtt.loop();
-    if(_interval > 0 && _measurementCallback && ((millis() - _lastMeasurement > _interval*1000) || millis() < _lastMeasurement)) { //millis will eventually overflow
-      _lastMeasurement = millis();
+    if(_willMeasure && _measurementCallback) { //millis will eventually overflow
+      _willMeasure = false;
       Serial.println("Collecting measurements");
       _measurementCallback();
     }
 }
 
-void Sensor::setMeasurement(int interval, void (*callback)()) {
+void SensorClass::setMeasurement(int interval, void (*callback)()) {
     _measurementCallback = callback;
-    _interval = interval;
+    //_measurementTicker.attach(interval, std::bind(&Sensor::_measureTick, this));
 }
 
-void Sensor::measured(char* type, double value, char* unit) {
+void SensorClass::_measureTick() {
+    _willMeasure = true;
+}
+
+void SensorClass::measured(char* type, double value, char* unit) {
     if(isnan(value)) {
       Serial.print("Measurement failed of ");
       Serial.print(type);
@@ -37,3 +45,5 @@ void Sensor::measured(char* type, double value, char* unit) {
     Serial.print(" ");
     Serial.println(unit);
 }
+
+SensorClass Sensor;

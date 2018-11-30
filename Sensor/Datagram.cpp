@@ -9,8 +9,8 @@ bool Datagram::decode(char* payload) {
   if(payload[0] == '\0') return false; //unexpected termination
 
   //datagram type
-  if(payload[0] == MSG) type = MSG;
-  else if(payload[0] == CMD) type = CMD;
+  if(payload[0] == 'M') type = TYPE_MSG;
+  else if(payload[0] == 'C') type = TYPE_CMD;
   else return false;
   payload++;
 
@@ -24,6 +24,6 @@ bool Datagram::decode(char* payload) {
   
 }
 
-void Datagram::encode(char* type) {
+void Datagram::encode(Datagram_type_t type) {
   
 }

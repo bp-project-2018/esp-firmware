@@ -2,6 +2,7 @@
 
 MQTT::MQTT() : _mqtt(_espClient) {
   _mqtt.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->_callback(topic, payload, length); });
+  _timestampTicker.attach(1, _timestampCallback, this);
 }
 
 void MQTT::loop() {
@@ -35,6 +36,10 @@ void MQTT::setServer(char* server) {
 
 void MQTT::_reconnectTimeout(MQTT* mqtt) {
     mqtt->_isReconnecting = false;
+}
+
+void MQTT::_timestampCallback(MQTT* mqtt) {
+    mqtt->timestamp++;
 }
 
 void MQTT::_callback(char* topic, byte* payload, unsigned int length) {

@@ -23,6 +23,10 @@ class MQTT {
     Ticker _reconnectTicker;
     static void _reconnectTimeout(MQTT* mqtt);
     void _callback(char* topic, byte* payload, unsigned int length);
+
+    unsigned long timestamp;
+    Ticker _timestampTicker;
+    static void _timestampCallback(MQTT* mqtt);
 };
 
 #endif

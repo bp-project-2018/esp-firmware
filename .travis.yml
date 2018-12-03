@@ -16,6 +16,5 @@ install:
 script:
   - build_platform esp8266
 notifications:
-  email:
-    on_success: change
-    on_failure: change
+  on_success: never
+  on_failure: never

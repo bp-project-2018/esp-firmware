@@ -14,6 +14,7 @@ const SHA256HMAC HMAC(AES_KEY, AES_KEY_LENGTH);
 #include <ESP8266WiFi.h>
 #include <Ticker.h>
 #include "MQTT.h"
+#include <ArduinoJson.h>
 
 class SensorClass {
   public:

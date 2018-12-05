@@ -14,12 +14,12 @@ class MQTT {
     void loop();
     void setServer(char* server);
     Datagram datagram;
+    PubSubClient _mqtt; //dirty, make private
   private:
     void _checkConnection();
     bool _isReconnecting;
     char _server[30];
     WiFiClient _espClient;
-    PubSubClient _mqtt; 
     Ticker _reconnectTicker;
     static void _reconnectTimeout(MQTT* mqtt);
     void _callback(char* topic, byte* payload, unsigned int length);

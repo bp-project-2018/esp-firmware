@@ -1,5 +1,5 @@
-#define HAS_TEMPHUM_DHT
-//#define HAS_BRIGHTNESS_ADC
+//#define HAS_TEMPHUM_DHT
+#define HAS_BRIGHTNESS_ADC
 
 #include "Sensor.h"
 

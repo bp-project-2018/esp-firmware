@@ -11,8 +11,9 @@ env:
      - ARDUINO_IDE_VERSION="1.8.7"
 before_install:
   - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+  - git clone https://github.com/intrbiz/arduino-crypto ~/arduino_ide/libraries/arduino-crypto || (cd ~/arduino_ide/libraries/arduino-crypto && git pull)
 install:
-  - arduino --install-library "PubSubClient","AESLib"
+  - arduino --install-library PubSubClient,AESLib,ArduinoJson
 script:
   - build_platform esp8266
 notifications:

@@ -1,4 +1,5 @@
 #include "MQTT.h"
+#include "Sensor.h"
 
 MQTT::MQTT() : _mqtt(_espClient) {
   _mqtt.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->_callback(topic, payload, length); });
@@ -15,7 +16,7 @@ void MQTT::_checkConnection() {
   Serial.print("Attempting MQTT connection to ");
   Serial.print(_server);
   Serial.print(" with clientId ");
-  String clientId = "Sensor-" + String(ESP.getChipId(), HEX);
+  String clientId = "Sensor-" + String((char*)Sensor.chipId);
   Serial.println(clientId);
 
   WiFi.mode(WIFI_STA);

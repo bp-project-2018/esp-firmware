@@ -11,7 +11,13 @@
 const byte AES_KEY[AES_KEY_LENGTH] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 const SHA256HMAC HMAC(AES_KEY, AES_KEY_LENGTH);
 
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include <ArduinoOTA.h>
+#endif
+#ifdef ESP32
+#include <WiFi.h>
+#endif
 #include <Ticker.h>
 #include "MQTT.h"
 #include <ArduinoJson.h>
@@ -22,6 +28,7 @@ class SensorClass {
   void loop();
   void setMeasurement(int interval, void (*callback)());
   void measured(char* type, double value, char* unit);
+  char chipId[10];
   private:
   MQTT _mqtt;
   

@@ -1,8 +1,22 @@
 #include "Sensor.h"
 
 SensorClass::SensorClass() : _mqtt() {
+    #ifdef ESP8266
+    snprintf(chipId, 10, "%04X", ESP.getChipId());
+    #endif
+    #ifdef ESP32
+    snprintf(chipId, 10, "%04X", (uint16_t)(ESP.getEfuseMac()>>32));
+    #endif
+    
     Serial.begin(9600);
-    WiFi.hostname("Sensor-" + ESP.getChipId());
+    char hostname[20];
+    sprintf(hostname, "Sensor-%s", chipId);
+    #ifdef ESP8266
+    WiFi.hostname(hostname);
+    #endif
+    #ifdef ESP32
+    WiFi.setHostname(hostname);
+    #endif
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     _mqtt.setServer(MQTT_SERVER);
@@ -43,7 +57,7 @@ void SensorClass::measured(char* type, double value, char* unit) {
 
     StaticJsonDocument<512> doc;
     JsonObject root = doc.as<JsonObject>();
-    root["device_id"] = String(ESP.getChipId(), HEX);
+    root["device_id"] = chipId;
     root["sensor_id"] = 1;
     root["value"] = value;
     root["type"] = type;

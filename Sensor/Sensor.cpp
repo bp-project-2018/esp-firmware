@@ -41,15 +41,15 @@ void SensorClass::measured(char* type, double value, char* unit) {
     Serial.print(" ");
     Serial.println(unit);
 
-    StaticJsonBuffer<512> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
+    StaticJsonDocument<512> doc;
+    JsonObject root = doc.as<JsonObject>();
     root["device_id"] = String(ESP.getChipId(), HEX);
     root["sensor_id"] = 1;
     root["value"] = value;
     root["type"] = type;
     root["unit"] = unit;
     char json[250];
-    root.printTo(json);
+    serializeJson(doc, json);
     _mqtt._mqtt.publish("master/inbox", json, false); //dirty, use method
 }
 

@@ -19,7 +19,9 @@ void setup() {
   Sensor.setMeasurement(10, measure); //produce a measurement value every X seconds
 
   #ifdef ESP8266
-  ArduinoOTA.setHostname("bp-sensor-"+ String((char*)Sensor.chipId));
+  char hostname[20];
+  sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
+  ArduinoOTA.setHostname(hostname);
   ArduinoOTA.begin();
   #endif
 }

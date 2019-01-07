@@ -1,7 +1,13 @@
-//#define HAS_TEMPHUM_DHT
-#define HAS_BRIGHTNESS_ADC
-
 #include "Sensor.h"
+
+#ifdef DEVICE_SENSOR_TEMPHUM
+#define HAS_TEMPHUM_DHT
+#endif
+
+#ifdef DEVICE_SENSOR_BRIGHTNESS
+#define HAS_BRIGHTNESS_ADC
+#endif
+
 
 #ifdef HAS_TEMPHUM_DHT
 #include <DHT.h>
@@ -9,10 +15,11 @@ DHT dht(5, DHT11);
 #endif
 
 void setup() {
+  Sensor.setup();
   Sensor.setMeasurement(10, measure); //produce a measurement value every X seconds
 
   #ifdef ESP8266
-  ArduinoOTA.setHostname("bp-sensor-"+ ESP.getChipId());
+  ArduinoOTA.setHostname("bp-sensor-"+ String((char*)Sensor.chipId));
   ArduinoOTA.begin();
   #endif
 }

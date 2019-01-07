@@ -7,8 +7,11 @@ SensorClass::SensorClass() : _mqtt() {
     #ifdef ESP32
     snprintf(chipId, 10, "%04X", (uint16_t)(ESP.getEfuseMac()>>32));
     #endif
-    
+
     Serial.begin(9600);
+}
+
+void SensorClass::setup() {
     char hostname[20];
     sprintf(hostname, "Sensor-%s", chipId);
     #ifdef ESP8266
@@ -19,6 +22,13 @@ SensorClass::SensorClass() : _mqtt() {
     #endif
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
     _mqtt.setServer(MQTT_SERVER);
 }
 

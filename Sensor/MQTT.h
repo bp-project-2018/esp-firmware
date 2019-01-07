@@ -3,9 +3,9 @@
 
 #include "Arduino.h"
 #include "Datagram.h"
-#include <WiFiClient.h>
 #include <PubSubClient.h>
 #ifdef ESP8266
+#include <WiFiClient.h>
 #include <ESP8266WiFi.h>
 #endif
 #ifdef ESP32

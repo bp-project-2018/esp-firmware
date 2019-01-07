@@ -1,6 +1,10 @@
 #ifndef Sensor_h
 #define Sensor_h
 
+#define DEVICE_BRIDGE
+//#define DEVICE_SENSOR_TEMPHUM
+//#define DEVICE_SENSOR_BRIGHTNESS
+
 #include "Arduino.h"
 #include <Crypto.h>
 
@@ -26,6 +30,7 @@ class SensorClass {
   public:
   SensorClass();
   void loop();
+  void setup();
   void setMeasurement(int interval, void (*callback)());
   void measured(char* type, double value, char* unit);
   char chipId[10];

@@ -125,7 +125,7 @@ void Datagram::encode(byte** result_out, int* result_length_out) {
   }
 
   { // Calculate HMAC.
-    SHA256HMAC hmac((const byte*) HMAC_PASSPHRASE, sizeof(HMAC_PASSPHRASE));
+    SHA256HMAC hmac((const byte*) HMAC_PASSPHRASE, strlen(HMAC_PASSPHRASE));
     hmac.doUpdate(hmacStart, hmacLength);
     hmac.doFinal(pos);
   }

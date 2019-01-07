@@ -81,7 +81,7 @@ void SensorClass::measured(char* type, double value, char* unit) {
     datagram.version = 0;
     datagram.encoding = Datagram::Payload_Encoding::JSON;
 
-    strcpy(datagram.address, "shredder");
+    strcpy(datagram.address, "kronos");
     for (int i = 0; i < 4; i++) datagram.fixed[i] = 0;
     datagram.fixedLength = 4;
 

@@ -6,14 +6,10 @@
 //#define DEVICE_SENSOR_BRIGHTNESS
 
 #include "Arduino.h"
-#include <Crypto.h>
 
 #define WIFI_SSID "sysnet-bp"
 #define WIFI_PASSWORD "totallysecure"
 #define MQTT_SERVER "192.168.10.1"
-#define AES_KEY_LENGTH 16
-const byte AES_KEY[AES_KEY_LENGTH] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-const SHA256HMAC HMAC(AES_KEY, AES_KEY_LENGTH);
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>

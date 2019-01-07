@@ -4,25 +4,40 @@
 #include "Arduino.h"
 
 #define DATAGRAM_ADDRESS_LENGTH 256
+#define AES_BLOCK_SIZE 16
 
 class Datagram {
   public:
-    typedef enum {
-        TYPE_MSG,
-        TYPE_CMD
-    } Datagram_type_t;
-    
-    Datagram();
-    bool decode(char* payload);
-    void encode(Datagram_type_t type);
-    Datagram_type_t type;
+    enum Datagram_Type {
+        MESSAGE,
+        COMMAND,
+    };
 
-    char sourceAddress[DATAGRAM_ADDRESS_LENGTH];
-    char targetAddress[DATAGRAM_ADDRESS_LENGTH];
-    
-    bool isValid;
-  private:
-    char* _payload;
+    enum Payload_Encoding {
+        BINARY,
+        JSON,
+        UTF8,
+    };
+
+  public:
+    bool decode(byte* data);
+    void encode(byte** result_out, int* result_length_out);
+
+    void generate_random_iv();
+
+  public:
+    Datagram_Type type;
+    int version;
+    Payload_Encoding encoding;
+
+    char address[DATAGRAM_ADDRESS_LENGTH];
+
+    byte fixed[16];
+    int fixedLength;
+    byte* payload;
+    int payloadLength;
+
+    byte iv[AES_BLOCK_SIZE];
 };
 
 #endif

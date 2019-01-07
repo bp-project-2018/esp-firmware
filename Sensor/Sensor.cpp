@@ -75,6 +75,29 @@ void SensorClass::measured(char* type, double value, char* unit) {
     char json[250];
     serializeJson(doc, json);
     _mqtt._mqtt.publish("master/inbox", json, false); //dirty, use method
+
+    Datagram datagram;
+    datagram.type = Datagram::Datagram_Type::MESSAGE;
+    datagram.version = 0;
+    datagram.encoding = Datagram::Payload_Encoding::JSON;
+
+    strcpy(datagram.address, "shredder");
+    for (int i = 0; i < 4; i++) datagram.fixed[i] = 0;
+    datagram.fixedLength = 4;
+
+    datagram.payload = (byte*) json;
+    datagram.payloadLength = strlen(json);
+
+    datagram.generate_random_iv();
+    byte* result;
+    int length;
+    datagram.encode(&result, &length);
+    if (result) {
+        _mqtt._mqtt.publish("shredder/inbox", result, length, false);
+        free(result);
+    } else {
+        Serial.println("Fail!");
+    }
 }
 
 SensorClass Sensor;

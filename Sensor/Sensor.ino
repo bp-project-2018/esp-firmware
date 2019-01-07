@@ -8,8 +8,13 @@
 DHT dht(5, DHT11);
 #endif
 
+#include <ArduinoOTA.h>
+
 void setup() {
   Sensor.setMeasurement(10, measure); //produce a measurement value every X seconds
+
+  ArduinoOTA.setHostname("bp-sensor-"+ ESP.getChipId());
+  ArduinoOTA.begin();
 }
 
 void loop() {

@@ -3,8 +3,12 @@
 
 #include "Arduino.h"
 
+#define TIME_SERVER_ADDRESS "public"
+
 #define DATAGRAM_ADDRESS_LENGTH 256
 #define AES_BLOCK_SIZE 16
+
+bool decode_time(byte* datagram, int datagram_length, int32_t* time_out);
 
 class Datagram {
   public:

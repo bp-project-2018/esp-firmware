@@ -1,13 +1,14 @@
 #include "MQTT.h"
 #include "Sensor.h"
+#include "Datagram.h"
 
 MQTT::MQTT() : _mqtt(_espClient) {
   _mqtt.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->_callback(topic, payload, length); });
-  _timestampTicker.attach(1, _timestampCallback, this);
 }
 
 void MQTT::loop() {
   _checkConnection();
+  _mqtt.loop();
 }
 
 void MQTT::_checkConnection() {
@@ -22,6 +23,22 @@ void MQTT::_checkConnection() {
   WiFi.mode(WIFI_STA);
   if (_mqtt.connect(clientId.c_str())) {
     Serial.println("connected");
+    {
+      char topic[256];
+
+      // Subscribe to time.
+      snprintf(topic, 256, "%s/time", TIME_SERVER_ADDRESS);
+      _mqtt.subscribe(topic);
+
+      if (!timestamp) {
+        // Send initial request.
+        snprintf(topic, 256, "%s/time/request", TIME_SERVER_ADDRESS);
+        _mqtt.publish(topic, "");
+
+        // Repeat sending requests until timestamp is received.
+        _timeRequestTicker.attach(1, _timeRequestCallback, this);
+      }
+    }
   } else {
     Serial.print("failed, rc=");
     Serial.print(_mqtt.state());
@@ -39,10 +56,24 @@ void MQTT::_reconnectTimeout(MQTT* mqtt) {
     mqtt->_isReconnecting = false;
 }
 
-void MQTT::_timestampCallback(MQTT* mqtt) {
-    mqtt->timestamp++;
+void MQTT::_timeRequestCallback(MQTT* mqtt) {
+  char topic[256];
+  snprintf(topic, 256, "%s/time/request", TIME_SERVER_ADDRESS);
+  mqtt->_mqtt.publish(topic, "");
 }
 
 void MQTT::_callback(char* topic, byte* payload, unsigned int length) {
-  
+  Serial.print("Received message on ");
+  Serial.print(topic);
+  Serial.print(" (");
+  Serial.print(length, DEC);
+  Serial.println(" bytes)");
+  char expected[256];
+  snprintf(expected, 256, "%s/time", TIME_SERVER_ADDRESS);
+  if (strcmp(topic, expected) == 0) {
+    if (decode_time(payload, length, &timestamp)) {
+      timestamp_millis = millis();
+      _timeRequestTicker.detach();
+    }
+  }
 }

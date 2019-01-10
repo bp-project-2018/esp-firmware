@@ -72,9 +72,9 @@ void SensorClass::measured(char* type, double value, char* unit) {
     root["value"] = value;
     root["type"] = type;
     root["unit"] = unit;
-    char json[250];
+
+    char json[512];
     serializeJson(doc, json);
-    _mqtt._mqtt.publish("master/inbox", json, false); //dirty, use method
 
     Datagram datagram;
     datagram.type = Datagram::Datagram_Type::MESSAGE;
@@ -82,8 +82,21 @@ void SensorClass::measured(char* type, double value, char* unit) {
     datagram.encoding = Datagram::Payload_Encoding::JSON;
 
     strcpy(datagram.address, "kronos");
-    for (int i = 0; i < 4; i++) datagram.fixed[i] = 0;
-    datagram.fixedLength = 4;
+
+    if (!_mqtt.timestamp) {
+        Serial.println("No timestamp received yet");
+        return;
+    }
+
+    { // Calculate current timestamp.
+        unsigned long delta = (millis() - _mqtt.timestamp_millis) / 1000;
+        int32_t timestamp = _mqtt.timestamp + delta;
+        datagram.fixedLength = 4;
+        datagram.fixed[0] = byte(timestamp >> 24);
+        datagram.fixed[1] = byte(timestamp >> 16);
+        datagram.fixed[2] = byte(timestamp >>  8);
+        datagram.fixed[3] = byte(timestamp >>  0);
+    }
 
     datagram.payload = (byte*) json;
     datagram.payloadLength = strlen(json);
@@ -92,12 +105,14 @@ void SensorClass::measured(char* type, double value, char* unit) {
     byte* result;
     int length;
     datagram.encode(&result, &length);
-    if (result) {
-        _mqtt._mqtt.publish("shredder/inbox", result, length, false);
-        free(result);
-    } else {
-        Serial.println("Fail!");
+    if (!result) {
+        Serial.println("Encoding datagram failed");
+        return;
     }
+
+    _mqtt._mqtt.publish("shredder/inbox", result, length, false);
+    free(result);
+    Serial.println("Ok!");
 }
 
 SensorClass Sensor;

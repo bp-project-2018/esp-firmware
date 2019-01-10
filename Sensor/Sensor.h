@@ -1,9 +1,9 @@
 #ifndef Sensor_h
 #define Sensor_h
 
-#define DEVICE_BRIDGE
+// #define DEVICE_BRIDGE
 //#define DEVICE_SENSOR_TEMPHUM
-//#define DEVICE_SENSOR_BRIGHTNESS
+#define DEVICE_SENSOR_BRIGHTNESS
 
 #include "Arduino.h"
 

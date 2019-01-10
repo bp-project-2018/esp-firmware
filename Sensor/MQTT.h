@@ -22,6 +22,11 @@ class MQTT {
     MQTT();
     void loop();
     void setServer(char* server);
+
+    // @Todo: Millis will overflow after approximately 50 days.
+    int32_t timestamp = 0; // Official timestamp from the server.
+    unsigned long timestamp_millis = 0; // Local time when the timestamp was received to calculate delta.
+
     Datagram datagram;
     PubSubClient _mqtt; //dirty, make private
   private:
@@ -33,9 +38,8 @@ class MQTT {
     static void _reconnectTimeout(MQTT* mqtt);
     void _callback(char* topic, byte* payload, unsigned int length);
 
-    unsigned long timestamp;
-    Ticker _timestampTicker;
-    static void _timestampCallback(MQTT* mqtt);
+    Ticker _timeRequestTicker;
+    static void _timeRequestCallback(MQTT* mqtt);
 };
 
 #endif

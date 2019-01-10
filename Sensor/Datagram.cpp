@@ -2,8 +2,47 @@
 
 #include "Datagram.h"
 
+const char* const TIME_SERVER_PASSPHRASE = "Ein Idiot in Uniform ist immer noch ein Idiot.";
+
 const byte AES_KEY[AES_BLOCK_SIZE] = {0xe8, 0xc4, 0xe4, 0x83, 0x0a, 0x9c, 0xfc, 0x1b, 0x05, 0xbe, 0xd9, 0xa2, 0xf5, 0x59, 0x08, 0x10};
-const char* HMAC_PASSPHRASE = "Unfortunately, there's a radio connected to my brain.";
+const char* const HMAC_PASSPHRASE = "Unfortunately, there's a radio connected to my brain.";
+
+bool decode_time(byte* datagram, int datagram_length, int32_t* timestamp_out) {
+  if (datagram_length != 2+4+SHA256_SIZE /* length, payload, mac */) {
+    Serial.println("decode_time: Datagram has wrong length.");
+    return false;
+  }
+
+  { // Validate provided length.
+    int high = int(datagram[0]);
+    int low = int(datagram[1]);
+    int length = (high << 8) + low;
+    if (length != 4) {
+      Serial.println("decode_time: Length is wrong.");
+      return false;
+    }
+  }
+
+  { // Validate MAC.
+    byte expected[SHA256_SIZE];
+    SHA256HMAC hmac((const byte*) TIME_SERVER_PASSPHRASE, strlen(TIME_SERVER_PASSPHRASE));
+    hmac.doUpdate(datagram + 2, 4);
+    hmac.doFinal(expected);
+    if (memcmp(datagram+2+4, expected, SHA256_SIZE) != 0) {
+      Serial.println("decode_time: MAC is wrong.");
+      return false;
+    }
+  }
+
+  int32_t timestamp = 0;
+  timestamp += int32_t(datagram[2]) << 24;
+  timestamp += int32_t(datagram[3]) << 16;
+  timestamp += int32_t(datagram[4]) <<  8;
+  timestamp += int32_t(datagram[5]) <<  0;
+
+  *timestamp_out = timestamp;
+  return true;
+}
 
 bool Datagram::decode(byte* data) {
   return false;

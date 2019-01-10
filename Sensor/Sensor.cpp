@@ -66,7 +66,7 @@ void SensorClass::measured(char* type, double value, char* unit) {
     Serial.println(unit);
 
     StaticJsonDocument<512> doc;
-    JsonObject root = doc.as<JsonObject>();
+    JsonObject root = doc.to<JsonObject>();
     root["device_id"] = chipId;
     root["sensor_id"] = 1;
     root["value"] = value;

@@ -1,3 +1,5 @@
+#include "MQTT.h"
+#include "CommProto.h"
 #include "Sensor.h"
 
 #ifdef DEVICE_SENSOR_TEMPHUM
@@ -15,7 +17,12 @@ DHT dht(5, DHT11);
 #endif
 
 void setup() {
+  protocol.set_mqtt_send_func([](const char* topic, const uint8_t* payload, unsigned int payload_length){
+    mqtt.pubSub.publish(topic, payload, payload_length);
+  });
+
   Sensor.setup();
+  mqtt.setServer(MQTT_SERVER);
   Sensor.setMeasurement(10, measure); //produce a measurement value every X seconds
 
   #ifdef ESP8266
@@ -27,6 +34,7 @@ void setup() {
 }
 
 void loop() {
+  mqtt.loop();
   Sensor.loop();
 }
 

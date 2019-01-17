@@ -23,16 +23,15 @@
 #include <ArduinoJson.h>
 
 class SensorClass {
-  public:
+public:
   SensorClass();
   void loop();
   void setup();
   void setMeasurement(int interval, void (*callback)());
   void measured(char* type, double value, char* unit);
   char chipId[10];
-  private:
-  MQTT _mqtt;
-  
+
+private:  
   Ticker _measurementTicker;
   bool _willMeasure;
   void (*_measurementCallback)();

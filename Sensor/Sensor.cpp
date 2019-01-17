@@ -5,9 +5,9 @@
 void mqtt_connect_callback();
 void mqtt_message_callback(char* topic, byte* payload, unsigned int length);
 
-SensorClass sensor;
+Sensor sensor;
 
-SensorClass::SensorClass() {
+Sensor::Sensor() {
 	#ifdef ESP8266
 		snprintf(chipId, 10, "%04X", ESP.getChipId());
 	#endif
@@ -18,7 +18,7 @@ SensorClass::SensorClass() {
 	Serial.begin(9600);
 }
 
-void SensorClass::setup() {
+void Sensor::setup() {
 	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
 		{
 			// Set wifi hostname.
@@ -70,7 +70,7 @@ void SensorClass::setup() {
 	#endif
 }
 
-void SensorClass::loop() {
+void Sensor::loop() {
 	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
 		mqtt.loop();
 	#endif
@@ -84,16 +84,16 @@ void SensorClass::loop() {
 	}
 }
 
-void SensorClass::setMeasurement(int interval, void (*callback)()) {
+void Sensor::setMeasurement(int interval, void (*callback)()) {
 	_measurementCallback = callback;
-	_measurementTicker.attach(interval, SensorClass::_measureTick, this);
+	_measurementTicker.attach(interval, Sensor::_measureTick, this);
 }
 
-void SensorClass::_measureTick(SensorClass* sensor) {
+void Sensor::_measureTick(Sensor* sensor) {
 	sensor->_willMeasure = true;
 }
 
-void SensorClass::measured(char* type, double value, char* unit) {
+void Sensor::measured(char* type, double value, char* unit) {
 	if(isnan(value)) {
 		Serial.print("Measurement failed of ");
 		Serial.print(type);

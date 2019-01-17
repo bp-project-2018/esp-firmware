@@ -23,9 +23,9 @@
 #include "MQTT.h"
 #include <ArduinoJson.h>
 
-class SensorClass {
+class Sensor {
 public:
-	SensorClass();
+	Sensor();
 	void loop();
 	void setup();
 	void setMeasurement(int interval, void (*callback)());
@@ -36,9 +36,9 @@ private:
 	Ticker _measurementTicker;
 	bool _willMeasure;
 	void (*_measurementCallback)();
-	static void _measureTick(SensorClass* sensor);
+	static void _measureTick(Sensor* sensor);
 };
 
-extern SensorClass sensor;
+extern Sensor sensor;
 
 #endif

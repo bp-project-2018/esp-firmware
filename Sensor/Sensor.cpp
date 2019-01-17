@@ -16,6 +16,8 @@ SensorClass::SensorClass() {
 }
 
 void SensorClass::setup() {
+	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
+
     char hostname[20];
     sprintf(hostname, "Sensor-%s", chipId);
     #ifdef ESP8266
@@ -33,9 +35,30 @@ void SensorClass::setup() {
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+
+    #ifdef ESP8266
+	char hostname[20];
+	sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
+	ArduinoOTA.setHostname(hostname);
+	ArduinoOTA.begin();
+	#endif
+
+	mqtt.setServer(MQTT_SERVER);
+
+	protocol.set_mqtt_send_func([](const char* topic, const uint8_t* payload, unsigned int payload_length){
+	    mqtt.pubSub.publish(topic, payload, payload_length);
+	});
+
+	#endif
+
+	#ifdef ESP32
+    bus.setup();
+    #endif
 }
 
 void SensorClass::loop() {
+	mqtt.loop();
+	bus.loop();
     if(_willMeasure && _measurementCallback) { //millis will eventually overflow
       _willMeasure = false;
       Serial.println("Collecting measurements");
@@ -79,4 +102,14 @@ void SensorClass::measured(char* type, double value, char* unit) {
     serializeJson(doc, json);
 
     protocol.send("shredder", (const byte*) json, strlen(json));
+}
+
+void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Received message on ");
+  Serial.print(topic);
+  Serial.print(" (");
+  Serial.print(length, DEC);
+  Serial.println(" bytes)");
+
+  protocol.on_mqtt_message(topic, payload, length);
 }

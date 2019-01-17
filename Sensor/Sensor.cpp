@@ -20,53 +20,60 @@ SensorClass::SensorClass() {
 
 void SensorClass::setup() {
 	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
-	{
-		char hostname[20];
-		sprintf(hostname, "Sensor-%s", chipId);
+		{
+			// Set wifi hostname.
+			char hostname[20];
+			sprintf(hostname, "Sensor-%s", chipId);
+			#ifdef ESP8266
+				WiFi.hostname(hostname);
+			#endif
+			#ifdef ESP32
+				WiFi.setHostname(hostname);
+			#endif
+		}
+
+		WiFi.mode(WIFI_STA);
+		WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+		while (WiFi.status() != WL_CONNECTED) {
+			delay(500);
+			Serial.print(".");
+		}
+		Serial.println("WiFi connected");
+		Serial.println("IP address: ");
+		Serial.println(WiFi.localIP());
+
 		#ifdef ESP8266
-		WiFi.hostname(hostname);
-	}
-	#endif
+			{
+				// Set OTA hostname.
+				char hostname[20];
+				sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
+				ArduinoOTA.setHostname(hostname);
+				ArduinoOTA.begin();
+			}
+		#endif
 
-	#ifdef ESP32
-		WiFi.setHostname(hostname);
-	#endif
+		mqtt.setServer(MQTT_SERVER);
 
-	WiFi.mode(WIFI_STA);
-	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-	while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
-		Serial.print(".");
-	}
-	Serial.println("WiFi connected");
-	Serial.println("IP address: ");
-	Serial.println(WiFi.localIP());
+		mqtt.set_connect_callback(mqtt_connect_callback);
+		mqtt.set_message_callback(mqtt_message_callback);
 
-	#ifdef ESP8266
-	{
-		char hostname[20];
-		sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
-		ArduinoOTA.setHostname(hostname);
-		ArduinoOTA.begin();
-	}
-	#endif
-
-	mqtt.setServer(MQTT_SERVER);
-
-	mqtt.set_connect_callback(mqtt_connect_callback);
-	mqtt.set_message_callback(mqtt_message_callback);
-
-	protocol.setup(MQTT::publish);
-
+		protocol.setup(MQTT::publish);
 	#endif
 
 	#ifdef ESP32
 		bus.setup();
+
+		#ifndef DEVICE_BRIDGE
+			// Set up protocol via CAN bus.
+			// protocol.setup();
+		#endif
 	#endif
 }
 
 void SensorClass::loop() {
-	mqtt.loop();
+	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
+		mqtt.loop();
+	#endif
 	#ifdef ESP32
 		bus.loop();
 	#endif

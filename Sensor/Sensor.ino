@@ -24,12 +24,12 @@ void loop() {
 }
 
 void measure() {
-  #ifdef HAS_BRIGHTNESS_ADC
+	#ifdef HAS_BRIGHTNESS_ADC
 	Sensor.measured("brightness", ((double)(1024-analogRead(0))/(double)1024)*100, "%");
-  #endif
+	#endif
 
-  #ifdef HAS_TEMPHUM_DHT
+	#ifdef HAS_TEMPHUM_DHT
 	Sensor.measured("temperature",  dht.readTemperature(), "°C");
 	Sensor.measured("humidity", dht.readHumidity(), "%");
-  #endif
+	#endif
 }

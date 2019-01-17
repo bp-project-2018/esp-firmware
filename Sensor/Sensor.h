@@ -25,18 +25,18 @@
 
 class SensorClass {
 public:
-  SensorClass();
-  void loop();
-  void setup();
-  void setMeasurement(int interval, void (*callback)());
-  void measured(char* type, double value, char* unit);
-  char chipId[10];
+	SensorClass();
+	void loop();
+	void setup();
+	void setMeasurement(int interval, void (*callback)());
+	void measured(char* type, double value, char* unit);
+	char chipId[10];
 
-private:  
-  Ticker _measurementTicker;
-  bool _willMeasure;
-  void (*_measurementCallback)();
-  static void _measureTick(SensorClass* sensor);
+private:
+	Ticker _measurementTicker;
+	bool _willMeasure;
+	void (*_measurementCallback)();
+	static void _measureTick(SensorClass* sensor);
 };
 
 extern SensorClass Sensor;

@@ -5,7 +5,7 @@
 Bus bus;
 
 Bus::Bus() {
-  	_ready = true;
+	_ready = true;
 }
 
 void Bus::setup() {
@@ -35,8 +35,8 @@ void Bus::_callback(int length) {
 	if(packetLength+1 >= CAN_MAX_PACKET_SIZE) return;
 
 	Serial.print("Received CAN frame with id 0x");
-  	Serial.print(CAN.packetId(), HEX);
-  	Serial.print(": ");
+	Serial.print(CAN.packetId(), HEX);
+	Serial.print(": ");
 	while (CAN.available()) {
 		byte b = CAN.read();
 		packet[packetLength++] = b;

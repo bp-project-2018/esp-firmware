@@ -32,11 +32,4 @@ void measure() {
 	Sensor.measured("temperature",  dht.readTemperature(), "°C");
 	Sensor.measured("humidity", dht.readHumidity(), "%");
   #endif
-
-	#ifndef DEVICE_BRIDGE
-    char topic[10] = "hello";
-    char payload[50] = "test123456789012345678901234567890";
-    bus.send((byte*)&topic, 5, (byte*)&payload, 34);
-    bus.send((byte*)&topic, 5, (byte*)&payload, 34);
-    #endif
 }

@@ -2,6 +2,9 @@
 
 #include "Sensor.h"
 
+void mqtt_connect_callback();
+void mqtt_message_callback(char* topic, byte* payload, unsigned int length);
+
 SensorClass Sensor;
 
 SensorClass::SensorClass() {
@@ -17,53 +20,61 @@ SensorClass::SensorClass() {
 
 void SensorClass::setup() {
 	#if defined(ESP8266) || defined(DEVICE_BRIDGE)
-
+  {    
     char hostname[20];
     sprintf(hostname, "Sensor-%s", chipId);
     #ifdef ESP8266
     WiFi.hostname(hostname);
-    #endif
-    #ifdef ESP32
-    WiFi.setHostname(hostname);
-    #endif
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+  }
+  #endif
 
-    #ifdef ESP8266
-	char hostname[20];
-	sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
-	ArduinoOTA.setHostname(hostname);
-	ArduinoOTA.begin();
+  #ifdef ESP32
+    WiFi.setHostname(hostname);
+  #endif
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+  }
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  #ifdef ESP8266
+  {
+    char hostname[20];
+    sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
+    ArduinoOTA.setHostname(hostname);
+    ArduinoOTA.begin();
+  }
 	#endif
 
 	mqtt.setServer(MQTT_SERVER);
 
-	protocol.set_mqtt_send_func([](const char* topic, const uint8_t* payload, unsigned int payload_length){
-	    mqtt.pubSub.publish(topic, payload, payload_length);
-	});
+  mqtt.set_connect_callback(mqtt_connect_callback);
+  mqtt.set_message_callback(mqtt_message_callback);
+
+  protocol.setup(MQTT::publish);
 
 	#endif
 
 	#ifdef ESP32
     bus.setup();
-    #endif
+  #endif
 }
 
 void SensorClass::loop() {
 	mqtt.loop();
-	bus.loop();
-    if(_willMeasure && _measurementCallback) { //millis will eventually overflow
+  #ifdef ESP32
+	 bus.loop();
+  #endif
+  if(_willMeasure && _measurementCallback) { //millis will eventually overflow
       _willMeasure = false;
       Serial.println("Collecting measurements");
       _measurementCallback();
-    }
+  }
 }
 
 void SensorClass::setMeasurement(int interval, void (*callback)()) {
@@ -104,7 +115,11 @@ void SensorClass::measured(char* type, double value, char* unit) {
     protocol.send("shredder", (const byte*) json, strlen(json));
 }
 
-void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+void mqtt_connect_callback() {
+  protocol.on_mqtt_connect(MQTT::subscribe);
+}
+
+void mqtt_message_callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Received message on ");
   Serial.print(topic);
   Serial.print(" (");

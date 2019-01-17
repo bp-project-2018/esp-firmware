@@ -1,3 +1,5 @@
+#ifdef ESP32
+
 #include "Bus.h"
 
 Bus bus;
@@ -104,3 +106,5 @@ void Bus::send(byte* topic, unsigned int topicLength, byte* payload, unsigned in
 
 	_ready = true;
 }
+
+#endif

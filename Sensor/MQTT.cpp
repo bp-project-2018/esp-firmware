@@ -5,8 +5,12 @@ MQTT mqtt;
 
 MQTT::MQTT() : pubSub(_espClient) {}
 
-void MQTT::set_callback(void (*callback)(char* topic, byte* payload, unsigned int length)) {
-  pubSub.setCallback(callback);
+void MQTT::publish(const char* topic, const uint8_t* payload, unsigned int payload_length) {
+  mqtt.pubSub.publish(topic, payload, payload_length);
+}
+
+void MQTT::subscribe(const char* topic) {
+  mqtt.pubSub.subscribe(topic);
 }
 
 void MQTT::loop() {
@@ -26,6 +30,7 @@ void MQTT::_checkConnection() {
   WiFi.mode(WIFI_STA);
   if (pubSub.connect(clientId.c_str())) {
     Serial.println("connected");
+    if (connect_callback) connect_callback();
   } else {
     Serial.print("failed, rc=");
     Serial.print(pubSub.state());

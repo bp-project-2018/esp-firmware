@@ -1,6 +1,8 @@
 #ifndef CommProto_h
 #define CommProto_h
 
+#include <Ticker.h>
+
 #include "Arduino.h"
 #include "Datagram.h"
 
@@ -30,6 +32,7 @@ public:
 
 private:
 	static void time_request_callback(CommProto* self);
+	void send_time_request();
 
 public:
 	// Public API to interact with the communication protocol.
@@ -38,10 +41,22 @@ public:
 
 private:
 	const PartnerConfig* find_partner(const char* address);
+	int64_t get_current_time();
 
 private:
 	MQTTPublishFunc publish = 0;
 	DatagramCallback callback = 0;
+
+private:
+	Ticker time_request_ticker;
+
+	bool last_valid = false;
+	byte last_nonce[DATAGRAM_NONCE_SIZE];
+	unsigned long last_millis = 0;
+
+	// @Todo: Millis will overflow after approximately 50 days.
+    int64_t timestamp = 0; // Official timestamp from the server.
+    unsigned long timestamp_millis = 0; // Local time when the timestamp was received to calculate delta.
 };
 
 // Singleton instance.

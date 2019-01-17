@@ -21,6 +21,7 @@ class MQTT {
     MQTT();
     void loop();
     void setServer(char* server);
+    void set_callback(void (*callback)(char* topic, byte* payload, unsigned int length));
 
     PubSubClient pubSub;
 
@@ -31,7 +32,6 @@ class MQTT {
     WiFiClient _espClient;
     Ticker _reconnectTicker;
     static void _reconnectTimeout(MQTT* mqtt);
-    void _callback(char* topic, byte* payload, unsigned int length);
 };
 
 extern MQTT mqtt;

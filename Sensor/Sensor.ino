@@ -17,6 +17,8 @@ DHT dht(5, DHT11);
 #endif
 
 void setup() {
+  mqtt.set_callback(mqtt_callback);
+ 
   protocol.set_mqtt_send_func([](const char* topic, const uint8_t* payload, unsigned int payload_length){
     mqtt.pubSub.publish(topic, payload, payload_length);
   });
@@ -36,6 +38,16 @@ void setup() {
 void loop() {
   mqtt.loop();
   Sensor.loop();
+}
+
+void mqtt_callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Received message on ");
+  Serial.print(topic);
+  Serial.print(" (");
+  Serial.print(length, DEC);
+  Serial.println(" bytes)");
+
+  protocol.on_mqtt_message(topic, payload, length);
 }
 
 void measure() {

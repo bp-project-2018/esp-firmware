@@ -1,11 +1,12 @@
 #include "MQTT.h"
 #include "Sensor.h"
-#include "Datagram.h"
 
 MQTT mqtt;
 
-MQTT::MQTT() : pubSub(_espClient) {
-  pubSub.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->_callback(topic, payload, length); });
+MQTT::MQTT() : pubSub(_espClient) {}
+
+void MQTT::set_callback(void (*callback)(char* topic, byte* payload, unsigned int length)) {
+  pubSub.setCallback(callback);
 }
 
 void MQTT::loop() {
@@ -40,12 +41,4 @@ void MQTT::setServer(char* server) {
 
 void MQTT::_reconnectTimeout(MQTT* mqtt) {
     mqtt->_isReconnecting = false;
-}
-
-void MQTT::_callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Received message on ");
-  Serial.print(topic);
-  Serial.print(" (");
-  Serial.print(length, DEC);
-  Serial.println(" bytes)");
 }

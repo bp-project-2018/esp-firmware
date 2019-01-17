@@ -137,7 +137,7 @@ bool disassemble_time_response(const byte* message, int message_length, const ch
 	return true;
 }
 
-bool disassemble_datagram(byte* datagram, int datagram_length, const char* address, const byte* key, const char* passphrase, int64_t* timestamp_out, byte* data_out, int* data_length_out) {
+bool disassemble_datagram(byte* datagram, int datagram_length, const char* address, const byte* key, const char* passphrase, int64_t* timestamp_out, byte* data_out, int data_out_max_length, int* data_length_out) {
 	if (!check_mac(datagram, datagram_length, passphrase)) return false;
 
 	byte* iv_start  = datagram + DATAGRAM_ADDRESS_LENGTH_SIZE + strlen(address);
@@ -161,7 +161,7 @@ bool disassemble_datagram(byte* datagram, int datagram_length, const char* addre
 	}
 
 	const int data_length = aes_length - padding - DATAGRAM_TIMESTAMP_SIZE;
-	if (data_length < 0) return false;
+	if (data_length < 0 || data_length > data_out_max_length) return false;
 
 	*timestamp_out = decode_timestamp(aes_start);
 	memcpy(data_out, aes_start+DATAGRAM_TIMESTAMP_SIZE, data_length);

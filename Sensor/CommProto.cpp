@@ -30,9 +30,49 @@ void CommProto::on_mqtt_connect(MQTTSubscribeFunc subscribe) {
 	// }
 }
 
-void CommProto::on_mqtt_message(char* topic, byte* payload, unsigned int length) {
-	
+void CommProto::on_mqtt_message(char* topic, byte* message, unsigned int message_length) {
+	char expected[256];	
 
+	snprintf(expected, sizeof(expected), "%s/inbox", host_address);
+	if (strcmp(topic, expected) == 0) {
+		// Handle datagram.
+
+		char address[256];
+		if (!extract_address(message, message_length, address)) return;
+
+		const PartnerConfig* sender = find_partner(address);
+		if (!sender) return;
+
+		int64_t timestamp;
+		byte data[COMMPROTO_MAX_DATAGRAM_SIZE+1];
+		int data_length;
+		if (!disassemble_datagram(message, message_length, address, sender->key, sender->passphrase, &timestamp, data, sizeof(data), &data_length)) return;
+
+		// Make payload zero-terminated for convenience.
+		data[data_length] = 0;
+
+		// current, err := client.getTime()
+		// if err != nil {
+		// 	log.WithFields(log.Fields{"err": err}).Warn("Failed to ge time while receiving datagram")
+		// 	return
+		// }
+
+		// if delta := timestamp - current; delta < -1000000000 /* ns */ || delta > 1000000000 /* ns */ { // @Hardcoded
+		// 	log.WithFields(log.Fields{"delta": delta}).Warn("Received datagram with invalid timestamp")
+		// 	return
+		// }
+
+		if (callback) callback(address, data, data_length);
+
+		return;
+	}
+
+	snprintf(expected, sizeof(expected), "%s/time", host_address);
+	if (strcmp(topic, expected) == 0) {
+		// Handle time response.
+		// ...
+		return;
+	}
 }
 
 void CommProto::time_request_callback(CommProto* self) {
@@ -67,7 +107,7 @@ void CommProto::send(const char* address, const byte* data, int data_length) {
 
 	char topic[256];
 	snprintf(topic, sizeof(topic), "%s/inbox", address);
-	publish(topic, buffer, length);
+	if (publish) publish(topic, buffer, length);
 }
 
 const PartnerConfig* CommProto::find_partner(const char* address) {

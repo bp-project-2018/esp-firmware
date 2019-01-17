@@ -39,6 +39,6 @@ private:
 	static void _measureTick(SensorClass* sensor);
 };
 
-extern SensorClass Sensor;
+extern SensorClass sensor;
 
 #endif

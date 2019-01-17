@@ -5,7 +5,7 @@
 void mqtt_connect_callback();
 void mqtt_message_callback(char* topic, byte* payload, unsigned int length);
 
-SensorClass Sensor;
+SensorClass sensor;
 
 SensorClass::SensorClass() {
 	#ifdef ESP8266
@@ -46,7 +46,7 @@ void SensorClass::setup() {
 			{
 				// Set OTA hostname.
 				char hostname[20];
-				sprintf(hostname, "bp-sensor-%s", Sensor.chipId);
+				sprintf(hostname, "bp-sensor-%s", sensor.chipId);
 				ArduinoOTA.setHostname(hostname);
 				ArduinoOTA.begin();
 			}

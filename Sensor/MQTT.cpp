@@ -24,7 +24,7 @@ void MQTT::_checkConnection() {
 	Serial.print("Attempting MQTT connection to ");
 	Serial.print(_server);
 	Serial.print(" with clientId ");
-	String clientId = "Sensor-" + String((char*)Sensor.chipId);
+	String clientId = "Sensor-" + String((char*)sensor.chipId);
 	Serial.println(clientId);
 
 	WiFi.mode(WIFI_STA);

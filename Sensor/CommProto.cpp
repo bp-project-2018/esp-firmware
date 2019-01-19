@@ -1,5 +1,4 @@
 #include "CommProto.h"
-#include "CommProtoConfig.h"
 
 // Singleton instance.
 CommProto protocol;
@@ -49,6 +48,11 @@ void CommProto::on_mqtt_message(char* topic, byte* message, unsigned int message
 
 		int64_t delta = timestamp - current;
 		if (delta < -1000000000 /* ns */ || delta > 1000000000 /* ns */) return; // @Hardcoded
+
+		int sender_index = sender - partner_configurations;
+		int64_t last = last_timestamps[sender_index];
+		if (last != 0 && timestamp <= last) return;
+		last_timestamps[sender_index] = timestamp;
 
 		// Make payload zero-terminated for convenience.
 		data[data_length] = 0;

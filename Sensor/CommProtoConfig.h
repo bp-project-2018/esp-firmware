@@ -1,7 +1,13 @@
 #ifndef CommProtoConfig_h
 #define CommProtoConfig_h
 
-#include "CommProto.h"
+#include "Datagram.h"
+
+struct PartnerConfig {
+	const char* address;
+	const char* passphrase;
+	const byte key[DATAGRAM_KEY_SIZE];
+};
 
 const char* const host_address = "kronos";
 

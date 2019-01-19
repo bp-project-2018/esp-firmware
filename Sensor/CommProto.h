@@ -5,14 +5,9 @@
 
 #include "Arduino.h"
 #include "Datagram.h"
+#include "CommProtoConfig.h"
 
 #define COMMPROTO_MAX_DATAGRAM_SIZE 1024
-
-struct PartnerConfig {
-	const char* address;
-	const char* passphrase;
-	const byte key[DATAGRAM_KEY_SIZE];
-};
 
 typedef void (*DatagramCallback)(const char* address, const byte* data, int data_length);
 
@@ -49,6 +44,8 @@ private:
 
 private:
 	Ticker time_request_ticker;
+
+	int64_t last_timestamps[partner_configurations_length];
 
 	bool last_valid = false;
 	byte last_nonce[DATAGRAM_NONCE_SIZE];

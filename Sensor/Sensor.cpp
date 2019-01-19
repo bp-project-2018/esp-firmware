@@ -4,6 +4,7 @@
 
 void mqtt_connect_callback();
 void mqtt_message_callback(char* topic, byte* payload, unsigned int length);
+void datagram_callback(const char* address, const byte* data, int data_length);
 
 Sensor sensor;
 
@@ -68,6 +69,8 @@ void Sensor::setup() {
 			// protocol.setup();
 		#endif
 	#endif
+
+	// protocol.set_datagram_callback(datagram_callback);
 }
 
 void Sensor::loop() {
@@ -134,4 +137,11 @@ void mqtt_message_callback(char* topic, byte* payload, unsigned int length) {
 	Serial.println(" bytes)");
 
 	protocol.on_mqtt_message(topic, payload, length);
+}
+
+void datagram_callback(const char* address, const byte* data, int data_length) {
+	Serial.print("Received datagram from ");
+	Serial.print(address);
+	Serial.print(": ");
+	Serial.println((const char*) data);
 }

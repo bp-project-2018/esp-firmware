@@ -11,19 +11,19 @@
 
 typedef void (*DatagramCallback)(const char* address, const byte* data, int data_length);
 
-typedef void (*MQTTPublishFunc)(const char* topic, const uint8_t* payload, unsigned int payload_length);
-typedef void (*MQTTSubscribeFunc)(const char* topic);
+typedef void (*TransportPublishFunc)(const char* topic, const uint8_t* payload, unsigned int payload_length);
+typedef void (*TransportSubscribeFunc)(const char* topic);
 
 class CommProto {
 public:
-	// API to connect with MQTT and Arduino.
+	// API to connect with the Arduino Sketch and the Transport (MQTT/CAN Bus/etc.).
 
 	// Must be called during setup to initialize the instance.
-	void setup(MQTTPublishFunc publish);
-	// Must be called after connecting to the MQTT server to subscribe to channels.
-	void on_mqtt_connect(MQTTSubscribeFunc subscribe);
-	// Must be called to notify the protocol of incoming MQTT messages.
-	void on_mqtt_message(char* topic, byte* payload, unsigned int length);
+	void setup(TransportPublishFunc publish);
+	// Must be called after connecting to the transport server to (re)subscribe to channels.
+	void on_transport_connect(TransportSubscribeFunc subscribe);
+	// Must be called to notify the protocol of incoming messages.
+	void on_transport_message(char* topic, byte* payload, unsigned int length);
 
 private:
 	static void time_request_callback(CommProto* self);
@@ -39,7 +39,7 @@ private:
 	int64_t get_current_time();
 
 private:
-	MQTTPublishFunc publish = 0;
+	TransportPublishFunc publish = 0;
 	DatagramCallback callback = 0;
 
 private:

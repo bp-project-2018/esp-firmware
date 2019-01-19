@@ -3,7 +3,7 @@
 #include "Sensor.h"
 
 void mqtt_connect_callback();
-void mqtt_message_callback(char* topic, byte* payload, unsigned int length);
+void message_callback(char* topic, byte* payload, unsigned int length);
 void datagram_callback(const char* address, const byte* data, int data_length);
 
 Sensor sensor;
@@ -56,17 +56,18 @@ void Sensor::setup() {
 		mqtt.setServer(MQTT_SERVER);
 
 		mqtt.set_connect_callback(mqtt_connect_callback);
-		mqtt.set_message_callback(mqtt_message_callback);
+		mqtt.set_message_callback(message_callback);
 
 		protocol.setup(MQTT::publish);
 	#endif
 
 	#ifdef ESP32
 		bus.setup();
+		bus.set_message_callback(message_callback);
 
 		#ifndef DEVICE_BRIDGE
 			// Set up protocol via CAN bus.
-			// protocol.setup();
+			protocol.setup(Bus::publish);
 		#endif
 	#endif
 
@@ -126,17 +127,17 @@ void Sensor::measured(char* type, double value, char* unit) {
 }
 
 void mqtt_connect_callback() {
-	protocol.on_mqtt_connect(MQTT::subscribe);
+	protocol.on_transport_connect(MQTT::subscribe);
 }
 
-void mqtt_message_callback(char* topic, byte* payload, unsigned int length) {
+void message_callback(char* topic, byte* payload, unsigned int length) {
 	Serial.print("Received message on ");
 	Serial.print(topic);
 	Serial.print(" (");
 	Serial.print(length, DEC);
 	Serial.println(" bytes)");
 
-	protocol.on_mqtt_message(topic, payload, length);
+	protocol.on_transport_message(topic, payload, length);
 }
 
 void datagram_callback(const char* address, const byte* data, int data_length) {

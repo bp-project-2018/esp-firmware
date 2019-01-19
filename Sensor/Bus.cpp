@@ -20,6 +20,13 @@ void Bus::setup() {
 
 void Bus::loop() {
 
+
+
+	// @Todo: Call callback like this:
+	// char* topic = ...; // must be zero-terminated.
+	// byte* payload = ...;
+	// unsigned int length = ...;
+	// if (message_callback) message_callback(topic, payload, length);
 }
 
 void Bus::_callback(int length) {
@@ -70,7 +77,7 @@ void Bus::_callback(int length) {
 	}
 }
 
-void Bus::send(byte* topic, unsigned int topicLength, byte* payload, unsigned int payloadLength) {
+void Bus::send(const byte* topic, unsigned int topicLength, const byte* payload, unsigned int payloadLength) {
 	for(int i = 0; !_ready && i < 20; i++) { //bus taken, wait until free again but maximum 20ms
 		delay(1);
 	}
@@ -105,6 +112,11 @@ void Bus::send(byte* topic, unsigned int topicLength, byte* payload, unsigned in
 	}
 
 	_ready = true;
+}
+
+void Bus::publish(const char* topic, const uint8_t* payload, unsigned int payload_length) {
+	const int topic_length = strlen(topic);
+	bus.send((const byte*) topic, topic_length, payload, payload_length);
 }
 
 #endif

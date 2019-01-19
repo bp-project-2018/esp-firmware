@@ -3,11 +3,11 @@
 // Singleton instance.
 CommProto protocol;
 
-void CommProto::setup(MQTTPublishFunc publish) {
+void CommProto::setup(TransportPublishFunc publish) {
 	this->publish = publish;
 }
 
-void CommProto::on_mqtt_connect(MQTTSubscribeFunc subscribe) {
+void CommProto::on_transport_connect(TransportSubscribeFunc subscribe) {
 	char topic[256];
 
 	snprintf(topic, sizeof(topic), "%s/inbox", host_address);
@@ -25,7 +25,7 @@ void CommProto::on_mqtt_connect(MQTTSubscribeFunc subscribe) {
 	}
 }
 
-void CommProto::on_mqtt_message(char* topic, byte* message, unsigned int message_length) {
+void CommProto::on_transport_message(char* topic, byte* message, unsigned int message_length) {
 	char expected[256];	
 
 	snprintf(expected, sizeof(expected), "%s/inbox", host_address);

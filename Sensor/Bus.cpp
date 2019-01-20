@@ -36,7 +36,6 @@ void Bus::_callback(int length) {
 		_ready = false;
 		Serial.println("Someone is started to transmit a CAN packet");
 		packetLength = 0;
-		isValid = false;
 	}
 
 	if(packetLength+1 >= CAN_MAX_PACKET_SIZE) return;
@@ -54,44 +53,60 @@ void Bus::_callback(int length) {
 	if(CAN.packetId() == 1) { //end of transmission
 		_ready = true;
 		Serial.println("CAN Bus free again");
-		
-		topicLength = int(packet[0]);
-		payloadLength = int(packet[1]) << 8;
-		payloadLength += int(packet[2]);
+
+    packet[CAN_MAX_PACKET_SIZE+1] = '\0'; //terminate buffer for safety reasons
+    
+    char* topic = (char*)packet+2;
+		unsigned int topicLength = strlen(topic);
+   
+    byte* payload = (byte*)topic+topicLength+1;
+   
+		payloadLength = int(packet[0]) << 8;
+		payloadLength += int(packet[1]);
 
 		Serial.print("Recevied topic length: ");
 		Serial.print(topicLength);
 		Serial.print(", payload length: ");
 		Serial.print(payloadLength);
 		Serial.print(", expected packet length: ");
-		Serial.print(topicLength + payloadLength + 3);
+		Serial.print(2 + topicLength + 1 + payloadLength);
 		Serial.print(", received packet length: ");
 		Serial.println(packetLength);
 
-		if(packetLength == topicLength + payloadLength + 3) { //valid transmission
+		if(packetLength == 2 + topicLength + 1 + payloadLength) { //valid transmission
 			Serial.println("Valid CAN transmission received");
-			isValid = true;
+			message_callback(topic, payload, payloadLength);
 		} else {
 			Serial.println("Invalid CAN transmission.");
 		}
 	}
 }
 
-void Bus::send(const byte* topic, unsigned int topicLength, const byte* payload, unsigned int payloadLength) {
+void Bus::send(const char* topic, const byte* payload, unsigned int payload_length) {
+  if(2 + strlen(topic) + 1 + payload_length > CAN_MAX_PACKET_SIZE) return; //messages too large
+  
 	for(int i = 0; !_ready && i < 20; i++) { //bus taken, wait until free again but maximum 20ms
 		delay(1);
 	}
 
-	int bytes = 0;
-	isValid = false;
-	packet[0] = byte(topicLength);
-	packet[1] = byte((payloadLength & 0xff00) >> 8);
-	packet[2] = byte(payloadLength & 0xff);
+  {
+    packetLength = 0;
+  	packet[packetLength++] = byte((payload_length & 0xff00) >> 8);
+  	packet[packetLength++] = byte(payload_length & 0xff);
+  }
 
-	memcpy(packet+3, topic, topicLength);
-	memcpy(packet+3+topicLength, payload, payloadLength);
-	packetLength = topicLength + payloadLength + 3;
+  {
+    strncpy((char*)packet+packetLength, topic, 255);
+    packetLength += strlen(topic);
+    packet[packetLength++] = '\0';
+  }
 
+  {
+  	memcpy(packet+packetLength, payload, payload_length);
+    packetLength += payload_length;
+  }
+
+  int bytes = 0;
 	for(unsigned int n = 0; n < packetLength; n++) {
 		if(bytes == 0) {
 			if(n == 0) { //first packet
@@ -115,8 +130,7 @@ void Bus::send(const byte* topic, unsigned int topicLength, const byte* payload,
 }
 
 void Bus::publish(const char* topic, const uint8_t* payload, unsigned int payload_length) {
-	const int topic_length = strlen(topic);
-	bus.send((const byte*) topic, topic_length, payload, payload_length);
+	bus.send(topic, payload, payload_length);
 }
 
 #endif

@@ -14,12 +14,10 @@ public:
 	void set_message_callback(CANMessageCallback callback) { this->message_callback = callback; }
 	void setup();
 	void loop();
-	byte packet[CAN_MAX_PACKET_SIZE];
+	byte packet[CAN_MAX_PACKET_SIZE+1];
 	unsigned int packetLength;
-	unsigned int topicLength;
 	unsigned int payloadLength;
-	bool isValid;
-	void send(const byte* topic, unsigned int topicLength, const byte* payload, unsigned int payloadLength);
+	void send(const char* topic, const byte* payload, unsigned int payload_length);
 
 	static void publish(const char* topic, const uint8_t* payload, unsigned int payload_length);
 

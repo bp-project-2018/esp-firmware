@@ -124,7 +124,7 @@ void Sensor::measured(char* type, double value, char* unit) {
 	char json[512];
 	serializeJson(doc, json);
 
-	protocol.send("shredder", (const byte*) json, strlen(json));
+	protocol.send("kronos", (const byte*) json, strlen(json));
 }
 
 void mqtt_connect_callback() {

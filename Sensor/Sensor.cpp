@@ -69,6 +69,7 @@ void Sensor::setup() {
 		#ifndef DEVICE_BRIDGE
 			// Set up protocol via CAN bus.
 			protocol.setup(Bus::publish);
+			protocol.on_transport_connect(NULL);
 		#endif
 	#endif
 

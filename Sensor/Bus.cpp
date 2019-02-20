@@ -19,14 +19,12 @@ void Bus::setup() {
 }
 
 void Bus::loop() {
-
-
-
-	// @Todo: Call callback like this:
-	// char* topic = ...; // must be zero-terminated.
-	// byte* payload = ...;
-	// unsigned int length = ...;
-	// if (message_callback) message_callback(topic, payload, length);
+	if (finished_packet_length) {
+		char* topic = (char*) (finished_packet+2);
+		byte* payload = (byte*) (topic+finished_topic_length+1);
+		if (message_callback) message_callback(topic, payload, finished_payload_length);
+		finished_packet_length = 0;
+	}
 }
 
 void Bus::_callback(int length) {
@@ -54,13 +52,13 @@ void Bus::_callback(int length) {
 		_ready = true;
 		Serial.println("CAN Bus free again");
 
-    packet[CAN_MAX_PACKET_SIZE+1] = '\0'; //terminate buffer for safety reasons
-    
-    char* topic = (char*)packet+2;
+		packet[CAN_MAX_PACKET_SIZE+1] = '\0'; //terminate buffer for safety reasons
+
+		char* topic = (char*)packet+2;
 		unsigned int topicLength = strlen(topic);
-   
-    byte* payload = (byte*)topic+topicLength+1;
-   
+
+		byte* payload = (byte*)topic+topicLength+1;
+
 		payloadLength = int(packet[0]) << 8;
 		payloadLength += int(packet[1]);
 
@@ -74,8 +72,16 @@ void Bus::_callback(int length) {
 		Serial.println(packetLength);
 
 		if(packetLength == 2 + topicLength + 1 + payloadLength) { //valid transmission
-			Serial.println("Valid CAN transmission received");
-			message_callback(topic, payload, payloadLength);
+			if (!finished_packet_length) {
+				memcpy(finished_packet, packet, packetLength);
+				finished_packet[packetLength] = '\0';
+				finished_topic_length = topicLength;
+				finished_payload_length = payloadLength;
+				finished_packet_length = packetLength;
+				Serial.println("Valid CAN transmission received");
+			} else {
+				Serial.println("Dropping CAN packet");
+			}
 		} else {
 			Serial.println("Invalid CAN transmission.");
 		}

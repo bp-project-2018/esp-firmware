@@ -11,10 +11,10 @@ void CommProto::on_transport_connect(TransportSubscribeFunc subscribe) {
 	char topic[256];
 
 	snprintf(topic, sizeof(topic), "%s/inbox", host_address);
-	subscribe(topic);
+	if (subscribe) subscribe(topic);
 
 	snprintf(topic, sizeof(topic), "%s/time", host_address);
-	subscribe(topic);
+	if (subscribe) subscribe(topic);
 
 	if (!timestamp) {
 		// Send initial request.

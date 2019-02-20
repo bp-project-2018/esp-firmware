@@ -5,6 +5,7 @@
 #include <CAN.h>
 
 #define CAN_MAX_PACKET_SIZE 1024
+#define CAN_RECEIVE_BUFFER_COUNT 2
 
 typedef void (*CANMessageCallback)(char* topic, byte* payload, unsigned int length);
 
@@ -24,11 +25,21 @@ private:
 	void callback(int length);
 
 private:
+	enum class ReceiveBufferStatus {
+		EMPTY, RECEIVING, READY
+	};
+
+	struct ReceiveBuffer {
+		ReceiveBufferStatus status = ReceiveBufferStatus::EMPTY;
+		unsigned int topic_length, payload_length, received_length;
+		byte data[CAN_MAX_PACKET_SIZE+1];
+	};
+
+private:
 	CANMessageCallback message_callback = 0;
-	int status;
-	unsigned int topic_length, payload_length;
-	unsigned int received_length;
-	byte received_data[CAN_MAX_PACKET_SIZE+1];
+	int ready_buffer_index = 0;
+	int current_buffer_index = 0;
+	ReceiveBuffer receive_buffers[CAN_RECEIVE_BUFFER_COUNT];
 };
 
 extern Bus bus;

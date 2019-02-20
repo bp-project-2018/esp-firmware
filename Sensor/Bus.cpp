@@ -2,15 +2,9 @@
 
 #include "Bus.h"
 
-#define STATUS_READY     0 // ready to receive packet
-#define STATUS_RECEIVING 1 // packet transmission in progress
-#define STATUS_RECEIVED  2 // packet ready for loop
-
 Bus bus;
 
-Bus::Bus() {
-	status = STATUS_READY;
-}
+Bus::Bus() {}
 
 void Bus::setup() {
 	CAN.setPins(35, 5);
@@ -24,63 +18,68 @@ void Bus::setup() {
 }
 
 void Bus::loop() {
-	if (status == STATUS_RECEIVED) {
-		char* topic = (char*) (received_data);
-		byte* payload = (byte*) (topic+topic_length);
-		if (message_callback) message_callback(topic, payload, payload_length);
-		status = STATUS_READY;
+	while (receive_buffers[ready_buffer_index].status == ReceiveBufferStatus::READY) {
+		ReceiveBuffer& buffer = receive_buffers[ready_buffer_index];
+		char* topic = (char*) (buffer.data);
+		byte* payload = (byte*) (topic+buffer.topic_length);
+		if (message_callback) message_callback(topic, payload, buffer.payload_length);
+		buffer.status = ReceiveBufferStatus::EMPTY;
+		if (++ready_buffer_index == CAN_RECEIVE_BUFFER_COUNT) ready_buffer_index = 0;
 	}
 }
 
 void Bus::callback(int length) {
 	if (CAN.packetRtr()) return; // ignore transmission request
 
+	ReceiveBuffer& buffer = receive_buffers[current_buffer_index];
+
 	switch (CAN.packetId()) {
 	case 0: // start of transmission
 
-		if (status == STATUS_RECEIVED) {
+		if (buffer.status == ReceiveBufferStatus::READY) {
 			// Previous packet has not yet been processed by the loop().
 			// Ignore new packet.
 			Serial.println("Dropping CAN packet");
 			return;
 		}
 
-		if (status == STATUS_RECEIVING) {
+		if (buffer.status == ReceiveBufferStatus::RECEIVING) {
 			// Another packet was already in progress.
 			// Discard old partial packet and start again.
 			Serial.println("CAN transmission interrupted by new packet");
 		}
 
-		status = STATUS_RECEIVING;
+		buffer.status = ReceiveBufferStatus::RECEIVING;
 
-		topic_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
-		payload_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
-		received_length = 0;
+		buffer.topic_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
+		buffer.payload_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
+		buffer.received_length = 0;
 		break;
 
 	case 1: // end of transmission
 	case 2: // data packet
 
-		if (status != STATUS_RECEIVING) return;
+		if (buffer.status != ReceiveBufferStatus::RECEIVING) return;
 
-		if (received_length + CAN.available() > CAN_MAX_PACKET_SIZE) {
+		if (buffer.received_length + CAN.available() > CAN_MAX_PACKET_SIZE) {
 			// Received packet too large. Drop it.
 			Serial.println("Received CAN packet too large");
-			status = STATUS_READY;
+			buffer.status = ReceiveBufferStatus::EMPTY;
 			return;
 		}
 
-		while (CAN.available()) received_data[received_length++] = CAN.read();
+		while (CAN.available()) buffer.data[buffer.received_length++] = CAN.read();
 
 		if (CAN.packetId() == 1) { // end of transmission
-			if (received_length == topic_length + payload_length) {
-				received_data[topic_length-1] = 0;
-				received_data[received_length] = 0;
+			if (buffer.received_length == buffer.topic_length + buffer.payload_length) {
+				buffer.data[buffer.topic_length-1] = 0;
+				buffer.data[buffer.received_length] = 0;
 				// Mark transmission as successful.
-				status = STATUS_RECEIVED;
+				buffer.status = ReceiveBufferStatus::READY;
+				if (++current_buffer_index == CAN_RECEIVE_BUFFER_COUNT) current_buffer_index = 0;
 			} else {
 				Serial.println("CAN receive failed");
-				status = STATUS_READY;
+				buffer.status = ReceiveBufferStatus::EMPTY;
 			}
 		}
 		break;
@@ -97,7 +96,7 @@ void Bus::send(const char* topic, const byte* payload, unsigned int payload_leng
 	}
 
 	// bus taken, wait until free again but maximum 20ms
-	for(int i = 0; status == STATUS_RECEIVING && i < 20; i++) {
+	for(int i = 0; receive_buffers[current_buffer_index].status == ReceiveBufferStatus::RECEIVING && i < 20; i++) {
 		delay(1);
 	}
 

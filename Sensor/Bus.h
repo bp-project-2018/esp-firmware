@@ -21,19 +21,14 @@ public:
 	static void publish(const char* topic, const uint8_t* payload, unsigned int payload_length);
 
 private:
-	void _callback(int length);
-
-private:
-	byte packet[CAN_MAX_PACKET_SIZE+1];
-	unsigned int packetLength;
-	unsigned int payloadLength;
-	bool _ready;
-
-	byte finished_packet[CAN_MAX_PACKET_SIZE+1];
-	unsigned int finished_packet_length = 0, finished_topic_length = 0, finished_payload_length = 0;
+	void callback(int length);
 
 private:
 	CANMessageCallback message_callback = 0;
+	int status;
+	unsigned int topic_length, payload_length;
+	unsigned int received_length;
+	byte received_data[CAN_MAX_PACKET_SIZE+1];
 };
 
 extern Bus bus;

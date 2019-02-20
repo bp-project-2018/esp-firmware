@@ -2,137 +2,126 @@
 
 #include "Bus.h"
 
+#define STATUS_READY     0 // ready to receive packet
+#define STATUS_RECEIVING 1 // packet transmission in progress
+#define STATUS_RECEIVED  2 // packet ready for loop
+
 Bus bus;
 
 Bus::Bus() {
-	_ready = true;
+	status = STATUS_READY;
 }
 
 void Bus::setup() {
 	CAN.setPins(35, 5);
+
 	// start the CAN bus at 500 kbps
 	if (!CAN.begin(500E3)) {
 		Serial.println("Starting CAN-Controller failed");
 	}
 
-	CAN.onReceive([](int length) { bus._callback(length); });
+	CAN.onReceive([](int length) { bus.callback(length); });
 }
 
 void Bus::loop() {
-	if (finished_packet_length) {
-		char* topic = (char*) (finished_packet+2);
-		byte* payload = (byte*) (topic+finished_topic_length+1);
-		if (message_callback) message_callback(topic, payload, finished_payload_length);
-		finished_packet_length = 0;
+	if (status == STATUS_RECEIVED) {
+		char* topic = (char*) (received_data);
+		byte* payload = (byte*) (topic+topic_length);
+		if (message_callback) message_callback(topic, payload, payload_length);
+		status = STATUS_READY;
 	}
 }
 
-void Bus::_callback(int length) {
-	if (CAN.packetRtr()) return; //we do not handle transmission requests for now
+void Bus::callback(int length) {
+	if (CAN.packetRtr()) return; // ignore transmission request
 
-	if(CAN.packetId() == 0) { //start of transmission
-		_ready = false;
-		Serial.println("Someone is started to transmit a CAN packet");
-		packetLength = 0;
-	}
+	switch (CAN.packetId()) {
+	case 0: // start of transmission
 
-	if(packetLength+1 >= CAN_MAX_PACKET_SIZE) return;
-
-	Serial.print("Received CAN frame with id 0x");
-	Serial.print(CAN.packetId(), HEX);
-	Serial.print(": ");
-	while (CAN.available()) {
-		byte b = CAN.read();
-		packet[packetLength++] = b;
-		Serial.print((char)b);
-	}
-	Serial.println();
-
-	if(CAN.packetId() == 1) { //end of transmission
-		_ready = true;
-		Serial.println("CAN Bus free again");
-
-		packet[CAN_MAX_PACKET_SIZE+1] = '\0'; //terminate buffer for safety reasons
-
-		char* topic = (char*)packet+2;
-		unsigned int topicLength = strlen(topic);
-
-		byte* payload = (byte*)topic+topicLength+1;
-
-		payloadLength = int(packet[0]) << 8;
-		payloadLength += int(packet[1]);
-
-		Serial.print("Recevied topic length: ");
-		Serial.print(topicLength);
-		Serial.print(", payload length: ");
-		Serial.print(payloadLength);
-		Serial.print(", expected packet length: ");
-		Serial.print(2 + topicLength + 1 + payloadLength);
-		Serial.print(", received packet length: ");
-		Serial.println(packetLength);
-
-		if(packetLength == 2 + topicLength + 1 + payloadLength) { //valid transmission
-			if (!finished_packet_length) {
-				memcpy(finished_packet, packet, packetLength);
-				finished_packet[packetLength] = '\0';
-				finished_topic_length = topicLength;
-				finished_payload_length = payloadLength;
-				finished_packet_length = packetLength;
-				Serial.println("Valid CAN transmission received");
-			} else {
-				Serial.println("Dropping CAN packet");
-			}
-		} else {
-			Serial.println("Invalid CAN transmission.");
+		if (status == STATUS_RECEIVED) {
+			// Previous packet has not yet been processed by the loop().
+			// Ignore new packet.
+			Serial.println("Dropping CAN packet");
+			return;
 		}
+
+		if (status == STATUS_RECEIVING) {
+			// Another packet was already in progress.
+			// Discard old partial packet and start again.
+			Serial.println("CAN transmission interrupted by new packet");
+		}
+
+		status = STATUS_RECEIVING;
+
+		topic_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
+		payload_length = (((unsigned int)(CAN.read())) << 8) + ((unsigned int)(CAN.read()));
+		received_length = 0;
+		break;
+
+	case 1: // end of transmission
+	case 2: // data packet
+
+		if (status != STATUS_RECEIVING) return;
+
+		if (received_length + CAN.available() > CAN_MAX_PACKET_SIZE) {
+			// Received packet too large. Drop it.
+			Serial.println("Received CAN packet too large");
+			status = STATUS_READY;
+			return;
+		}
+
+		while (CAN.available()) received_data[received_length++] = CAN.read();
+
+		if (CAN.packetId() == 1) { // end of transmission
+			if (received_length == topic_length + payload_length) {
+				received_data[topic_length-1] = 0;
+				received_data[received_length] = 0;
+				// Mark transmission as successful.
+				status = STATUS_RECEIVED;
+			} else {
+				Serial.println("CAN receive failed");
+				status = STATUS_READY;
+			}
+		}
+		break;
 	}
 }
 
 void Bus::send(const char* topic, const byte* payload, unsigned int payload_length) {
-  if(2 + strlen(topic) + 1 + payload_length > CAN_MAX_PACKET_SIZE) return; //messages too large
-  
-	for(int i = 0; !_ready && i < 20; i++) { //bus taken, wait until free again but maximum 20ms
+	unsigned int topic_strlen = strlen(topic);
+	unsigned int topic_length = topic_strlen + 1;
+	unsigned int total_length = topic_length + payload_length;
+	if (total_length > CAN_MAX_PACKET_SIZE) {
+		Serial.println("Cannot send CAN packet: too large");
+		return;
+	}
+
+	// bus taken, wait until free again but maximum 20ms
+	for(int i = 0; status == STATUS_RECEIVING && i < 20; i++) {
 		delay(1);
 	}
 
-  {
-    packetLength = 0;
-  	packet[packetLength++] = byte((payload_length & 0xff00) >> 8);
-  	packet[packetLength++] = byte(payload_length & 0xff);
-  }
+	byte buffer[CAN_MAX_PACKET_SIZE];
+	memcpy(buffer, topic, topic_length);
+	memcpy(buffer + topic_length, payload, payload_length);
 
-  {
-    strncpy((char*)packet+packetLength, topic, 255);
-    packetLength += strlen(topic);
-    packet[packetLength++] = '\0';
-  }
+	CAN.beginPacket(0);
+	CAN.write(byte(topic_length >> 8));
+	CAN.write(byte(topic_length >> 0));
+	CAN.write(byte(payload_length >> 8));
+	CAN.write(byte(payload_length >> 0));
+	CAN.endPacket();
 
-  {
-  	memcpy(packet+packetLength, payload, payload_length);
-    packetLength += payload_length;
-  }
-
-  int bytes = 0;
-	for(unsigned int n = 0; n < packetLength; n++) {
-		if(bytes == 0) {
-			if(n == 0) { //first packet
-				CAN.beginPacket(0);
-			} else if(packetLength - n <= 8) { //signal last packet
-				CAN.beginPacket(1);
-			} else { //normal data packet
-				CAN.beginPacket(2);
-			}
-		}
-
-		CAN.write(packet[n]);
-
-		bytes = (bytes+1)%8;
-		if(bytes == 0 || n+1 == packetLength) { //last byte for this packet
-			CAN.endPacket();
-		}
+	unsigned int n = 0;
+	for (; n + 8 < total_length; n += 8) {
+		CAN.beginPacket(2);
+		CAN.write(buffer + n, 8);
+		CAN.endPacket();
 	}
 
-	_ready = true;
+	CAN.beginPacket(1);
+	CAN.write(buffer + n, total_length - n);
+	CAN.endPacket();
 }
 
 void Bus::publish(const char* topic, const uint8_t* payload, unsigned int payload_length) {

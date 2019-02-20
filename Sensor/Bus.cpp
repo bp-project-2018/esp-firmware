@@ -104,23 +104,30 @@ void Bus::send(const char* topic, const byte* payload, unsigned int payload_leng
 	memcpy(buffer, topic, topic_length);
 	memcpy(buffer + topic_length, payload, payload_length);
 
-	CAN.beginPacket(0);
+	unsigned int n;
+
+	if (!CAN.beginPacket(0)) goto failed;
 	CAN.write(byte(topic_length >> 8));
 	CAN.write(byte(topic_length >> 0));
 	CAN.write(byte(payload_length >> 8));
 	CAN.write(byte(payload_length >> 0));
-	CAN.endPacket();
+	if (!CAN.endPacket()) goto failed;
 
-	unsigned int n = 0;
-	for (; n + 8 < total_length; n += 8) {
-		CAN.beginPacket(2);
+	for (n = 0; n + 8 < total_length; n += 8) {
+		if (!CAN.beginPacket(2)) goto failed;
 		CAN.write(buffer + n, 8);
-		CAN.endPacket();
+		if (!CAN.endPacket()) goto failed;
 	}
 
-	CAN.beginPacket(1);
+	if (!CAN.beginPacket(1)) goto failed;
 	CAN.write(buffer + n, total_length - n);
-	CAN.endPacket();
+	if (!CAN.endPacket()) goto failed;
+
+	return;
+
+failed:
+	Serial.println("Failed to send CAN packet: CAN error");
+	return;
 }
 
 void Bus::publish(const char* topic, const uint8_t* payload, unsigned int payload_length) {

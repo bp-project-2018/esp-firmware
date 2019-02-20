@@ -56,8 +56,8 @@ void Bus::callback(int length) {
 		buffer.received_length = 0;
 		break;
 
-	case 1: // end of transmission
-	case 2: // data packet
+	case 1: // data packet
+	case 2: // end of transmission
 
 		if (buffer.status != ReceiveBufferStatus::RECEIVING) return;
 
@@ -70,7 +70,7 @@ void Bus::callback(int length) {
 
 		while (CAN.available()) buffer.data[buffer.received_length++] = CAN.read();
 
-		if (CAN.packetId() == 1) { // end of transmission
+		if (CAN.packetId() == 2) { // end of transmission
 			if (buffer.received_length == buffer.topic_length + buffer.payload_length) {
 				buffer.data[buffer.topic_length-1] = 0;
 				buffer.data[buffer.received_length] = 0;
@@ -114,12 +114,12 @@ void Bus::send(const char* topic, const byte* payload, unsigned int payload_leng
 	if (!CAN.endPacket()) goto failed;
 
 	for (n = 0; n + 8 < total_length; n += 8) {
-		if (!CAN.beginPacket(2)) goto failed;
+		if (!CAN.beginPacket(1)) goto failed;
 		CAN.write(buffer + n, 8);
 		if (!CAN.endPacket()) goto failed;
 	}
 
-	if (!CAN.beginPacket(1)) goto failed;
+	if (!CAN.beginPacket(2)) goto failed;
 	CAN.write(buffer + n, total_length - n);
 	if (!CAN.endPacket()) goto failed;
 

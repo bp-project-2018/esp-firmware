@@ -1,11 +1,11 @@
 #include "Sensor.h"
 
 #ifdef DEVICE_SENSOR_TEMPHUM
-#define HAS_TEMPHUM_DHT
+	#define HAS_TEMPHUM_DHT
 #endif
 
 #ifdef DEVICE_SENSOR_BRIGHTNESS
-#define HAS_BRIGHTNESS_ADC
+	#define HAS_BRIGHTNESS_ADC
 #endif
 
 

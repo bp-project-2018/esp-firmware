@@ -1,6 +1,7 @@
 #ifndef CommProtoConfig_h
 #define CommProtoConfig_h
 
+#include "SensorConfig.h"
 #include "Datagram.h"
 
 struct PartnerConfig {

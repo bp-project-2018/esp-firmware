@@ -1,24 +1,19 @@
 #ifndef Sensor_h
 #define Sensor_h
 
-//#define DEVICE_BRIDGE
-//#define DEVICE_SENSOR_TEMPHUM
-//#define DEVICE_SENSOR_BRIGHTNESS
-
+#include "SensorConfig.h"
 #include "Arduino.h"
 
-#define WIFI_SSID "sysnet-bp"
-#define WIFI_PASSWORD "totallysecure"
-#define MQTT_SERVER "192.168.10.1"
-
 #ifdef ESP8266
-#include <ESP8266WiFi.h>
-#include <ArduinoOTA.h>
+  #include <ESP8266WiFi.h>
+  #include <ArduinoOTA.h>
 #endif
+
 #ifdef ESP32
-#include <WiFi.h>
-#include "Bus.h"
+  #include <WiFi.h>
+  #include "Bus.h"
 #endif
+
 #include <Ticker.h>
 #include "MQTT.h"
 #include <ArduinoJson.h>

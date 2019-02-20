@@ -99,7 +99,7 @@ void Sensor::_measureTick(Sensor* sensor) {
 	sensor->_willMeasure = true;
 }
 
-void Sensor::measured(char* type, double value, char* unit) {
+void Sensor::measured(int id, char* type, double value, char* unit) {
 	if(isnan(value)) {
 		Serial.print("Measurement failed of ");
 		Serial.print(type);
@@ -117,7 +117,7 @@ void Sensor::measured(char* type, double value, char* unit) {
 	StaticJsonDocument<512> doc;
 	JsonObject root = doc.to<JsonObject>();
 	root["device_id"] = chipId;
-	root["sensor_id"] = 1;
+	root["sensor_id"] = id;
 	root["value"] = value;
 	root["type"] = type;
 	root["unit"] = unit;

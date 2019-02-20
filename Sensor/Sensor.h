@@ -29,7 +29,7 @@ public:
 	void loop();
 	void setup();
 	void setMeasurement(int interval, void (*callback)());
-	void measured(char* type, double value, char* unit);
+	void measured(int id, char* type, double value, char* unit);
 	char chipId[10];
 
 private:

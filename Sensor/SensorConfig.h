@@ -23,22 +23,20 @@
 // #define DEVICE_BRIDGE
 // - The sensor acts as a MQTT-CAN-bridge (ESP32 only).
 //
-// #define DEVICE_SENSOR_BRIGHTNESS_LOWRES
-// - The sensor has a brightness sensor connected to a 10-bit ADC (ESP8266).
-//
-// #define DEVICE_SENSOR_BRIGHTNESS_HIGHRES
-// - The sensor has a brightness sensor connected to a 12-bit ADC (ESP32).
+// #define DEVICE_SENSOR_BRIGHTNESS
+// - The sensor has a brightness sensor.
 //
 // #define DEVICE_SENSOR_TEMPHUM
 // - The sensor has a temperature and humidity sensor.
+// - Connect a DHT11 sensor to pin 5 (ESP8266) or pin 16 (ESP32).
 //
-// NOTE: Except for the brightness sensors these defines are not mutually exclusive,
-// i.e. a bridge can also have sensors and one ESP can have both a brightness and
-// a temperature and humidity sensor. Just specify multiple defines.
+// NOTE: These defines are not mutually exclusive, i.e. a bridge can also have
+// sensors and one ESP can have both a brightness and a temperature and humidity
+// sensor. Just specify multiple defines.
 //
 
 #if SENSOR_CONFIG == SENSOR_KALLIOPE
-	#define DEVICE_SENSOR_BRIGHTNESS_LOWRES
+	#define DEVICE_SENSOR_BRIGHTNESS
 
 #elif SENSOR_CONFIG == SENSOR_JULIAMUELLER
 	#define DEVICE_SENSOR_TEMPHUM
@@ -47,7 +45,7 @@
 	#define DEVICE_BRIDGE
 
 #elif SENSOR_CONFIG == SENSOR_PETER
-	#define DEVICE_SENSOR_BRIGHTNESS_HIGHRES
+	#define DEVICE_SENSOR_BRIGHTNESS
 
 #elif SENSOR_CONFIG == SENSOR_MARCUWE
 	#define DEVICE_SENSOR_TEMPHUM

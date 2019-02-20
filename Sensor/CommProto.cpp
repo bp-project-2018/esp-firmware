@@ -76,7 +76,7 @@ void CommProto::on_transport_message(char* topic, byte* message, unsigned int me
 		if (!last_valid) return;
 		if (memcmp(nonce, last_nonce, DATAGRAM_NONCE_SIZE) != 0) return;
 		last_valid = false;
-		if (millis() - last_millis > 100) return;
+		if (millis() - last_millis > 1000) return;
 
 		this->timestamp = timestamp;
 		this->timestamp_millis = millis();

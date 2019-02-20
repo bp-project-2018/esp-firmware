@@ -129,7 +129,12 @@ void Sensor::measured(int id, char* type, double value, char* unit) {
 }
 
 void mqtt_connect_callback() {
-	protocol.on_transport_connect(MQTT::subscribe);
+	#ifdef DEVICE_BRIDGE
+		MQTT::subscribe("#");
+		protocol.on_transport_connect(NULL);
+	#else
+		protocol.on_transport_connect(MQTT::subscribe);
+	#endif
 }
 
 void mqtt_message_callback(char* topic, byte* payload, unsigned int length) {

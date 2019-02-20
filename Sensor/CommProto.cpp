@@ -103,6 +103,7 @@ void CommProto::send_time_request() {
 	char topic[256];
 	snprintf(topic, sizeof(topic), "%s/time/request", time_server_config->address);
 	if (publish) publish(topic, request, length);
+	Serial.println("Sent time request");
 }
 
 void CommProto::send(const char* address, const byte* data, int data_length) {

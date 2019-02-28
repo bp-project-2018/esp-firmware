@@ -18,6 +18,31 @@ void Bus::setup() {
 }
 
 void Bus::loop() {
+	{
+		// Report callback errors.
+		noInterrupts();
+		ReceiveCallbackStatus status = receive_status;
+		receive_status = ReceiveCallbackStatus();
+		interrupts();
+		if (status.dropped) {
+			Serial.print("CAN transmissions dropped: ");
+			Serial.println(status.dropped);
+		}
+		if (status.interrupted) {
+			Serial.print("CAN transmissions interrupted by new packet: ");
+			Serial.println(status.interrupted);
+		}
+		if (status.size_errors) {
+			Serial.print("CAN transmissions discarded because they were too large: ");
+			Serial.println(status.size_errors);
+		}
+		if (status.receive_errors) {
+			Serial.print("CAN transmissions failed: ");
+			Serial.println(status.receive_errors);	
+		}
+	}
+
+	// Call message_callback for completed transmissions.
 	while (receive_buffers[ready_buffer_index].status == ReceiveBufferStatus::READY) {
 		ReceiveBuffer& buffer = receive_buffers[ready_buffer_index];
 		char* topic = (char*) (buffer.data);
@@ -39,14 +64,14 @@ void Bus::callback(int length) {
 		if (buffer.status == ReceiveBufferStatus::READY) {
 			// Previous packet has not yet been processed by the loop().
 			// Ignore new packet.
-			Serial.println("Dropping CAN packet");
+			receive_status.dropped++;
 			return;
 		}
 
 		if (buffer.status == ReceiveBufferStatus::RECEIVING) {
 			// Another packet was already in progress.
 			// Discard old partial packet and start again.
-			Serial.println("CAN transmission interrupted by new packet");
+			receive_status.interrupted++;
 		}
 
 		buffer.status = ReceiveBufferStatus::RECEIVING;
@@ -63,7 +88,7 @@ void Bus::callback(int length) {
 
 		if (buffer.received_length + CAN.available() > CAN_MAX_PACKET_SIZE) {
 			// Received packet too large. Drop it.
-			Serial.println("Received CAN packet too large");
+			receive_status.size_errors++;
 			buffer.status = ReceiveBufferStatus::EMPTY;
 			return;
 		}
@@ -78,7 +103,7 @@ void Bus::callback(int length) {
 				buffer.status = ReceiveBufferStatus::READY;
 				if (++current_buffer_index == CAN_RECEIVE_BUFFER_COUNT) current_buffer_index = 0;
 			} else {
-				Serial.println("CAN receive failed");
+				receive_status.receive_errors++;
 				buffer.status = ReceiveBufferStatus::EMPTY;
 			}
 		}

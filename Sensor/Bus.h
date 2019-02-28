@@ -25,6 +25,11 @@ private:
 	void callback(int length);
 
 private:
+	struct ReceiveCallbackStatus {
+		byte dropped = 0, interrupted = 0;
+		byte size_errors = 0, receive_errors = 0; 
+	};
+
 	enum class ReceiveBufferStatus {
 		EMPTY, RECEIVING, READY
 	};
@@ -36,6 +41,7 @@ private:
 	};
 
 private:
+	ReceiveCallbackStatus receive_status;
 	CANMessageCallback message_callback = 0;
 	int ready_buffer_index = 0;
 	int current_buffer_index = 0;

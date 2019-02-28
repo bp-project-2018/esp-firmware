@@ -73,7 +73,7 @@ void Sensor::setup() {
 		#endif
 	#endif
 
-	// protocol.set_datagram_callback(datagram_callback);
+	protocol.set_datagram_callback(datagram_callback);
 }
 
 void Sensor::loop() {
@@ -170,4 +170,9 @@ void datagram_callback(const char* address, const byte* data, int data_length) {
 	Serial.print(address);
 	Serial.print(": ");
 	Serial.println((const char*) data);
+
+	if (strcmp((const char*) data, "ping") == 0) {
+		const char* message = "pong";
+		protocol.send(address, (const byte*) message, strlen(message));
+	}
 }

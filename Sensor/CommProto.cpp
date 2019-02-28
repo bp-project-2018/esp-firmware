@@ -32,16 +32,20 @@ void CommProto::on_transport_message(char* topic, byte* message, unsigned int me
 	if (strcmp(topic, expected) == 0) {
 		// Handle datagram.
 
-		char address[256];
-		if (!extract_address(message, message_length, address)) return;
+		const PartnerConfig* sender;
 
-		const PartnerConfig* sender = find_partner(address);
-		if (!sender) return;
+		{ // Find sender based on address contained in message.
+			char address[256];
+			if (!extract_address(message, message_length, address)) return;
+
+			sender = find_partner(address);
+			if (!sender) return;
+		}
 
 		int64_t timestamp;
-		byte data[COMMPROTO_MAX_DATAGRAM_SIZE+1];
+		byte* data;
 		int data_length;
-		if (!disassemble_datagram(message, message_length, address, sender->key, sender->passphrase, &timestamp, data, sizeof(data), &data_length)) return;
+		if (!disassemble_datagram(message, message_length, sender->address, sender->key, sender->passphrase, &timestamp, &data, &data_length)) return;
 
 		int64_t current = get_current_time();
 		if (!current) return;
@@ -55,9 +59,10 @@ void CommProto::on_transport_message(char* topic, byte* message, unsigned int me
 		last_timestamps[sender_index] = timestamp;
 
 		// Make payload zero-terminated for convenience.
+		// This will overwrite one payload or HMAC byte in the decoded message.
 		data[data_length] = 0;
 
-		if (callback) callback(address, data, data_length);
+		if (callback) callback(sender->address, data, data_length);
 		return;
 	}
 

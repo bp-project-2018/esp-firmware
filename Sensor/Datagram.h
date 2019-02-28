@@ -21,6 +21,6 @@ int assemble_datagram(byte* result, int result_length, const char* address, cons
 
 bool extract_address(const byte* message, int message_length, char* address_out);
 bool disassemble_time_response(const byte* message, int message_length, const char* address, const char* passphrase, int64_t* timestamp_out, byte* nonce_out);
-bool disassemble_datagram(byte* datagram, int datagram_length, const char* address, const byte* key, const char* passphrase, int64_t* timestamp_out, byte* data_out, int data_out_max_length, int* data_length_out);
+bool disassemble_datagram(byte* datagram, int datagram_length, const char* address, const byte* key, const char* passphrase, int64_t* timestamp_out, byte** data_out, int* data_length_out);
 
 #endif

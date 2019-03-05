@@ -41,3 +41,26 @@ For convenience the libraries are provided in `Resources/Libraries.zip` and can 
 
 - [Arduino Crypto](https://github.com/intrbiz/arduino-crypto) (not available in Library Manager)
 - [PubSubClient](https://pubsubclient.knolleary.net/) (included in sketch folder to increase MQTT_MAX_PACKET_SIZE)
+
+## Configuration
+
+To configure the firmware change the following line in `SensorConfig.h`:
+
+```
+#define SENSOR_CONFIG SENSOR_KALLIOPE
+```
+
+There are several predefined configurations available as listed at the top of file.
+To change the predefined configurations see the comments in `SensorConfig.h` and update the network configurations inside `CommProtoConfig.h`.
+
+## Upload
+
+To upload the firmware configure the Arduino IDE as follows:
+
+ESP8266:
+
+![ESP8266 Configuration](Resources/ESP8266-Configuration.png)
+
+ESP32:
+
+![ESP32 Configuration](Resources/ESP32-Configuration.png)

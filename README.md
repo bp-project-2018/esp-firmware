@@ -4,6 +4,10 @@ We built a prototype of an IoT / Cyber-Physical system-of-systems network.
 
 This is the sensor firmware for the ESPs.
 
+# Wiring
+
+To set up the system of systems, please follow the [Wiring Guide](Resources/Wiring-Guide.pdf).
+
 # Compilation
 
 To compile please use the Arduino IDE.
